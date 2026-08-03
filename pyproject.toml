@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "molt"
+version = "0.1.0"
+description = "Elastic on-device inference: swap models mid-generation, carry the KV cache across"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "torch>=2.4",
+    "transformers>=4.53",
+    "accelerate>=0.30",
+    "numpy>=1.24",
+    "psutil>=5.9",
+]
+
+[project.optional-dependencies]
+bench = ["matplotlib>=3.7"]
+test = ["pytest>=7.4"]
+
+[tool.setuptools]
+packages = ["molt"]

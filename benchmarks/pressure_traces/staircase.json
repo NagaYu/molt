@@ -1,0 +1,38 @@
+{
+  "name": "staircase",
+  "description": "Monotonically tightening budget: every rung of the ladder is used in turn, ending below what even the smallest model plus its cache needs if nothing is demoted.",
+  "duration_s": 60.0,
+  "total_system_mb": 11778.0,
+  "events": [
+    {
+      "t": 0,
+      "budget_mb": 11778.0,
+      "label": "idle"
+    },
+    {
+      "t": 10,
+      "budget_mb": 6477.9,
+      "label": "app A"
+    },
+    {
+      "t": 22,
+      "budget_mb": 3651.2,
+      "label": "app B"
+    },
+    {
+      "t": 34,
+      "budget_mb": 2355.6,
+      "label": "app C"
+    },
+    {
+      "t": 46,
+      "budget_mb": 1766.7,
+      "label": "app D"
+    },
+    {
+      "t": 60,
+      "budget_mb": 1766.7,
+      "label": "saturated"
+    }
+  ]
+}

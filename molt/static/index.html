@@ -1,0 +1,174 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Molt — elastic inference demo</title>
+<style>
+  :root{--bg:#fbfbfa;--fg:#1a1a19;--mut:#6b6b68;--line:#e3e3e0;--acc:#2f6f9f;
+        --t0:#dce8f2;--t1:#f4e2c4;--t2:#e8dcea;--warn:#c1443c;--ok:#2e7d5b}
+  @media (prefers-color-scheme:dark){:root{--bg:#17181a;--fg:#e9e9e6;--mut:#9a9a97;
+        --line:#2c2d30;--t0:#22364a;--t1:#4a3a1e;--t2:#3a2b40}}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+       background:var(--bg);color:var(--fg)}
+  .wrap{max-width:940px;margin:0 auto;padding:28px 20px 64px}
+  h1{font-size:22px;margin:0 0 2px;letter-spacing:-.01em}
+  .sub{color:var(--mut);margin:0 0 22px;font-size:14px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+  .card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:transparent}
+  label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
+  textarea,input,select,button{font:inherit;color:inherit;background:transparent;
+       border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  textarea{width:100%;min-height:90px;resize:vertical}
+  button{cursor:pointer;background:var(--acc);color:#fff;border-color:transparent;padding:9px 16px}
+  button.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+  button:disabled{opacity:.5;cursor:default}
+  #out{white-space:pre-wrap;min-height:120px;font-size:15px;line-height:1.6}
+  .tok{border-radius:2px;padding:1px 0}
+  .t-tier0{background:var(--t0)} .t-tier1{background:var(--t1)} .t-tier2{background:var(--t2)}
+  .mig{display:inline-block;font-size:11px;color:var(--mut);border:1px dashed var(--line);
+       border-radius:999px;padding:1px 8px;margin:0 5px;vertical-align:middle;white-space:nowrap}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(122px,1fr));gap:10px;margin-top:6px}
+  .stat b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+  .stat span{font-size:11px;color:var(--mut)}
+  .bar{height:7px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:7px}
+  .bar>i{display:block;height:100%;background:var(--acc);transition:width .25s,background .25s}
+  .legend{font-size:12px;color:var(--mut);margin-top:10px}
+  .swatch{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin:0 4px 0 10px}
+  .ok{color:var(--ok)} .bad{color:var(--warn)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+</style>
+
+<div class="wrap">
+  <h1>Molt</h1>
+  <p class="sub">Elastic on-device inference. Shrink the memory budget mid-answer and watch the
+    token stream keep going — on a smaller model, with the KV cache carried across.</p>
+
+  <div class="card">
+    <label for="prompt">Prompt</label>
+    <textarea id="prompt">Explain, in a few sentences, why an operating system might reclaim memory from a background process, and what a well-behaved application should do about it.</textarea>
+    <div class="row" style="margin:10px 0 0">
+      <div><label for="ntok">max tokens</label><input id="ntok" type="number" value="120" min="1" max="1024" style="width:96px"></div>
+      <button id="go">Generate</button>
+      <button id="squeeze" class="ghost">Squeeze memory now</button>
+      <button id="release" class="ghost">Release</button>
+      <div style="flex:1"></div>
+      <div><label for="trace">pressure trace</label>
+        <select id="trace">
+          <option value="">— manual —</option>
+          <option value="spike_mid_answer">spike_mid_answer</option>
+          <option value="sawtooth">sawtooth</option>
+          <option value="staircase">staircase</option>
+          <option value="stop">stop trace</option>
+        </select></div>
+    </div>
+    <div class="legend">Token background = the model that produced it.
+      <span class="swatch t-tier0"></span>tier0
+      <span class="swatch t-tier1"></span>tier1
+      <span class="swatch t-tier2"></span>tier2</div>
+  </div>
+
+  <div class="card" style="margin-top:14px"><div id="out"></div></div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="stats">
+      <div class="stat"><b id="s-tier">—</b><span>current tier</span></div>
+      <div class="stat"><b id="s-use">—</b><span>in use / budget (MiB)</span></div>
+      <div class="stat"><b id="s-mig">0</b><span>migrations</span></div>
+      <div class="stat"><b id="s-tok">0</b><span>tokens served</span></div>
+      <div class="stat"><b id="s-kill" class="ok">0</b><span>forced terminations</span></div>
+      <div class="stat"><b id="s-ttft">—</b><span>TTFT (ms)</span></div>
+    </div>
+    <div class="bar"><i id="s-bar" style="width:0%"></i></div>
+    <div class="legend" id="s-note">idle</div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const out = $("#out");
+let streaming = false;
+
+async function post(path, body){
+  const r = await fetch(path, {method:"POST", headers:{"Content-Type":"application/json"},
+                              body: JSON.stringify(body)});
+  return r.json();
+}
+
+async function refresh(){
+  try{
+    const s = await (await fetch("/stats")).json();
+    $("#s-tier").textContent = s.current_tier || "idle";
+    $("#s-use").textContent = `${Math.round(s.in_use_mb)} / ${Math.round(s.budget_mb)}`;
+    $("#s-mig").textContent = s.counters.migrations;
+    $("#s-tok").textContent = s.counters.tokens;
+    const k = $("#s-kill");
+    k.textContent = s.counters.kills;
+    k.className = s.counters.kills === 0 ? "ok" : "bad";
+    const u = Math.max(0, Math.min(1.2, s.utilisation || 0));
+    const bar = $("#s-bar");
+    bar.style.width = Math.min(100, u*100) + "%";
+    bar.style.background = u > 1 ? "var(--warn)" : (u > .85 ? "#d98c2b" : "var(--acc)");
+    $("#s-note").textContent =
+      `${s.resident.map(r=>`${r.tier} ${Math.round(r.mb)}MiB`).join(" · ") || "no model resident"}`
+      + ` — pressure: ${s.pressure_label}`;
+  }catch(e){ /* server restarting */ }
+}
+setInterval(refresh, 700); refresh();
+
+$("#squeeze").onclick = async () => {
+  const s = await (await fetch("/stats")).json();
+  await post("/admin/pressure", {budget_mb: Math.max(600, s.in_use_mb * 0.45)});
+  refresh();
+};
+$("#release").onclick = async () => {
+  const h = await (await fetch("/health")).json();
+  const top = Math.max(...h.tiers.map(t=>t.est_mb));
+  await post("/admin/pressure", {budget_mb: top * 1.6});
+  refresh();
+};
+$("#trace").onchange = async e => {
+  if(!e.target.value) return;
+  await post("/admin/pressure", {trace: e.target.value});
+  refresh();
+};
+
+$("#go").onclick = async () => {
+  if(streaming) return;
+  streaming = true; $("#go").disabled = true; out.innerHTML = "";
+  const res = await fetch("/v1/generate/stream", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({prompt: $("#prompt").value,
+                          max_new_tokens: parseInt($("#ntok").value, 10)})});
+  const rd = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
+  while(true){
+    const {value, done} = await rd.read(); if(done) break;
+    buf += dec.decode(value, {stream:true});
+    let i;
+    while((i = buf.indexOf("\n\n")) >= 0){
+      const line = buf.slice(0, i).replace(/^data: /, ""); buf = buf.slice(i+2);
+      let ev; try{ ev = JSON.parse(line); }catch{ continue; }
+      if(ev.type === "start"){ $("#s-ttft").textContent = Math.round(ev.ttft_ms); }
+      else if(ev.type === "queued"){
+        const d = document.createElement("span"); d.className = "mig";
+        d.textContent = `queued — ${ev.reason} (${ev.in_use_mb} / ${ev.budget_mb} MiB)`;
+        out.appendChild(d);
+      }
+      else if(ev.type === "token"){
+        const sp = document.createElement("span");
+        sp.className = "tok t-" + ev.tier; sp.textContent = ev.text;
+        out.appendChild(sp);
+      }
+      else if(ev.type === "migration"){
+        const d = document.createElement("span"); d.className = "mig";
+        d.textContent = `⇄ ${ev.from} → ${ev.to} · ${ev.method} · ${ev.cost_ms} ms`;
+        out.appendChild(d);
+      }
+      else if(ev.type === "error"){
+        const d = document.createElement("span"); d.className = "mig bad";
+        d.textContent = "error: " + ev.error; out.appendChild(d);
+      }
+      out.scrollIntoView({block:"end"});
+    }
+  }
+  streaming = false; $("#go").disabled = false; refresh();
+};
+</script>

@@ -1,0 +1,787 @@
+{
+  "condition": "A",
+  "label": "A \u00b7 Static-large",
+  "description": "Always the best model.  Highest quality until the OS reclaims it.",
+  "policy": "static",
+  "start_tier": "tier0",
+  "kills": 5,
+  "expect_kills": true,
+  "aggregate": {
+    "n_prompts": 5,
+    "n_killed": 5,
+    "n_finished": 0,
+    "mean_ttft_ms": NaN,
+    "max_ttft_ms": 3898.8536249999015,
+    "mean_itl_ms": NaN,
+    "worst_itl_ms": 245.78387500014287,
+    "mean_p99_itl_ms": NaN,
+    "mean_stall_time_ms": NaN,
+    "total_stalls": 0,
+    "mean_migrations": 0.0,
+    "mean_migration_ms": 0.0,
+    "mean_flops_saving": 0.0,
+    "handoff_jsd": NaN,
+    "handoff_jsd_raw": NaN,
+    "max_handoff_jsd": NaN,
+    "excess_jsd": 0.0,
+    "peak_jsd_at_migration": 0.0,
+    "repetition_rate": 0.0,
+    "peak_mb": 5915.381103515625,
+    "mean_tokens": 8.0,
+    "frac_top_tier": 1.0
+  },
+  "quality": {
+    "judge_nll": NaN,
+    "judge_ppl": NaN,
+    "judge_agreement": NaN,
+    "accuracy": 0.0,
+    "needle_recall": 0.0,
+    "task_accuracy": 0.0,
+    "repetition_rate": 0.0,
+    "distinct_2": 1.0,
+    "n_prompts": 5,
+    "n_killed": 5
+  },
+  "quality_raw": [
+    {
+      "id": "needle_select",
+      "kind": "needle",
+      "repetition_rate": 0.0,
+      "distinct_2": 1.0,
+      "killed": true,
+      "correct": 0.0
+    },
+    {
+      "id": "needle_second_hop",
+      "kind": "needle",
+      "repetition_rate": 0.0,
+      "distinct_2": 1.0,
+      "killed": true,
+      "correct": 0.0
+    },
+    {
+      "id": "task_order",
+      "kind": "task",
+      "repetition_rate": 0.0,
+      "distinct_2": 1.0,
+      "killed": true,
+      "correct": 0.0
+    },
+    {
+      "id": "open_explain",
+      "kind": "open",
+      "repetition_rate": 0.0,
+      "distinct_2": 1.0,
+      "killed": true
+    },
+    {
+      "id": "open_story",
+      "kind": "open",
+      "repetition_rate": 0.0,
+      "distinct_2": 1.0,
+      "killed": true
+    }
+  ],
+  "transcripts": [
+    {
+      "prompt_id": "needle_select",
+      "token_ids": [
+        220,
+        22,
+        19,
+        16,
+        18,
+        271,
+        14582,
+        25
+      ],
+      "killed": true
+    },
+    {
+      "prompt_id": "needle_second_hop",
+      "token_ids": [
+        95165,
+        74,
+        3779,
+        78,
+        271,
+        785,
+        3671,
+        8473
+      ],
+      "killed": true
+    },
+    {
+      "prompt_id": "task_order",
+      "token_ids": [
+        72318,
+        271,
+        785,
+        3671,
+        8473,
+        3807,
+        8357,
+        518
+      ],
+      "killed": true
+    },
+    {
+      "prompt_id": "open_explain",
+      "token_ids": [
+        1527,
+        10350,
+        1849,
+        2578,
+        57483,
+        4938,
+        504,
+        264
+      ],
+      "killed": true
+    },
+    {
+      "prompt_id": "open_story",
+      "token_ids": [
+        362,
+        25073,
+        1380,
+        458,
+        2310,
+        5662,
+        374,
+        51734
+      ],
+      "killed": true
+    }
+  ],
+  "per_prompt": [
+    {
+      "app_id": "A:needle_select",
+      "killed": true,
+      "kill_reason": "OOM: 5915 MiB in use > 2650 MiB budget (tier tier0, token 8)",
+      "finished": false,
+      "migration_ms_total": 0,
+      "migration_ms_mean": 0.0,
+      "transplant_flops_saving": 0.0,
+      "repetition_rate_3": 0.0,
+      "peak_mb": 5915.162353515625,
+      "tiers_used": [
+        "tier0"
+      ],
+      "frac_tokens_on_top_tier": 1.0,
+      "ttft_ms": 3898.8536249999015,
+      "n_tokens": 8,
+      "mean_itl_ms": 141.5081875000226,
+      "max_itl_ms": 168.80591700009973,
+      "p50_itl_ms": 159.35945799992624,
+      "p95_itl_ms": 168.80591700009973,
+      "p99_itl_ms": 168.80591700009973,
+      "total_ms": 5034.88762500001,
+      "n_stalls": 0,
+      "stall_time_ms": 0,
+      "mean_handoff_jsd": NaN,
+      "mean_handoff_jsd_raw": NaN,
+      "max_handoff_jsd": NaN,
+      "n_handoff_samples": 0,
+      "steady_state_jsd": 0.691841470343726,
+      "migration_jsd": 0.0,
+      "excess_jsd": 0.0,
+      "peak_jsd_at_migration": 0.0,
+      "n_migrations": 0,
+      "stall_threshold_ms": 637.4378319997049,
+      "prompt_id": "needle_select",
+      "text_head": " 7413\n\nQuestion:"
+    },
+    {
+      "app_id": "A:needle_second_hop",
+      "killed": true,
+      "kill_reason": "OOM: 5915 MiB in use > 2650 MiB budget (tier tier0, token 8)",
+      "finished": false,
+      "migration_ms_total": 0,
+      "migration_ms_mean": 0.0,
+      "transplant_flops_saving": 0.0,
+      "repetition_rate_3": 0.0,
+      "peak_mb": 5915.381103515625,
+      "tiers_used": [
+        "tier0"
+      ],
+      "frac_tokens_on_top_tier": 1.0,
+      "ttft_ms": 2425.176500000134,
+      "n_tokens": 8,
+      "mean_itl_ms": 138.62159887497683,
+      "max_itl_ms": 163.54183299995384,
+      "p50_itl_ms": 157.11637499998687,
+      "p95_itl_ms": 163.54183299995384,
+      "p99_itl_ms": 163.54183299995384,
+      "total_ms": 3537.723124999957,
+      "n_stalls": 0,
+      "stall_time_ms": 0,
+      "mean_handoff_jsd": NaN,
+      "mean_handoff_jsd_raw": NaN,
+      "max_handoff_jsd": NaN,
+      "n_handoff_samples": 0,
+      "steady_state_jsd": 0.6922627176557269,
+      "migration_jsd": 0.0,
+      "excess_jsd": 0.0,
+      "peak_jsd_at_migration": 0.0,
+      "n_migrations": 0,
+      "stall_threshold_ms": 628.4654999999475,
+      "prompt_id": "needle_second_hop",
+      "text_head": " Hokkaido\n\nThe device runs"
+    },
+    {
+      "app_id": "A:task_order",
+      "killed": true,
+      "kill_reason": "OOM: 5912 MiB in use > 2650 MiB budget (tier tier0, token 8)",
+      "finished": false,
+      "migration_ms_total": 0,
+      "migration_ms_mean": 0.0,
+      "transplant_flops_saving": 0.0,
+      "repetition_rate_3": 0.0,
+      "peak_mb": 5915.381103515625,
+      "tiers_used": [
+        "tier0"
+      ],
+      "frac_tokens_on_top_tier": 1.0,
+      "ttft_ms": 2187.0949169997402,
+      "n_tokens": 8,
+      "mean_itl_ms": 152.13853124993193,
+      "max_itl_ms": 194.75808299966957,
+      "p50_itl_ms": 166.07220800005962,
+      "p95_itl_ms": 194.75808299966957,
+      "p99_itl_ms": 194.75808299966957,
+      "total_ms": 3408.1842089999554,
+      "n_stalls": 0,
+      "stall_time_ms": 0,
+      "mean_handoff_jsd": NaN,
+      "mean_handoff_jsd_raw": NaN,
+      "max_handoff_jsd": NaN,
+      "n_handoff_samples": 0,
+      "steady_state_jsd": 0.6911669756684985,
+      "migration_jsd": 0.0,
+      "excess_jsd": 0.0,
+      "peak_jsd_at_migration": 0.0,
+      "n_migrations": 0,
+      "stall_threshold_ms": 664.2888320002385,
+      "prompt_id": "task_order",
+      "text_head": " kettle\n\nThe device runs several applications at"
+    },
+    {
+      "app_id": "A:open_explain",
+      "killed": true,
+      "kill_reason": "OOM: 5905 MiB in use > 2650 MiB budget (tier tier0, token 8)",
+      "finished": false,
+      "migration_ms_total": 0,
+      "migration_ms_mean": 0.0,
+      "transplant_flops_saving": 0.0,
+      "repetition_rate_3": 0.0,
+      "peak_mb": 5915.381103515625,
+      "tiers_used": [
+        "tier0"
+      ],
+      "frac_tokens_on_top_tier": 1.0,
+      "ttft_ms": 1772.6856670001325,
+      "n_tokens": 8,
+      "mean_itl_ms": 138.32090624993043,
+      "max_itl_ms": 167.95862499975556,
+      "p50_itl_ms": 156.19870799991986,
+      "p95_itl_ms": 167.95862499975556,
+      "p99_itl_ms": 167.95862499975556,
+      "total_ms": 2883.3230830000502,
+      "n_stalls": 0,
+      "stall_time_ms": 0,
+      "mean_handoff_jsd": NaN,
+      "mean_handoff_jsd_raw": NaN,
+      "max_handoff_jsd": NaN,
+      "n_handoff_samples": 0,
+      "steady_state_jsd": 0.691773636000497,
+      "migration_jsd": 0.0,
+      "excess_jsd": 0.0,
+      "peak_jsd_at_migration": 0.0,
+      "n_migrations": 0,
+      "stall_threshold_ms": 624.7948319996794,
+      "prompt_id": "open_explain",
+      "text_head": " An operating system might reclaim memory from a"
+    },
+    {
+      "app_id": "A:open_story",
+      "killed": true,
+      "kill_reason": "OOM: 5904 MiB in use > 2650 MiB budget (tier tier0, token 8)",
+      "finished": false,
+      "migration_ms_total": 0,
+      "migration_ms_mean": 0.0,
+      "transplant_flops_saving": 0.0,
+      "repetition_rate_3": 0.0,
+      "peak_mb": 5915.381103515625,
+      "tiers_used": [
+        "tier0"
+      ],
+      "frac_tokens_on_top_tier": 1.0,
+      "ttft_ms": 1696.9787500001985,
+      "n_tokens": 8,
+      "mean_itl_ms": 155.2027188749321,
+      "max_itl_ms": 245.78387500014287,
+      "p50_itl_ms": 158.63499999977648,
+      "p95_itl_ms": 245.78387500014287,
+      "p99_itl_ms": 245.78387500014287,
+      "total_ms": 2943.273124999905,
+      "n_stalls": 0,
+      "stall_time_ms": 0,
+      "mean_handoff_jsd": NaN,
+      "mean_handoff_jsd_raw": NaN,
+      "max_handoff_jsd": NaN,
+      "n_handoff_samples": 0,
+      "steady_state_jsd": 0.6885686687060765,
+      "migration_jsd": 0.0,
+      "excess_jsd": 0.0,
+      "peak_jsd_at_migration": 0.0,
+      "n_migrations": 0,
+      "stall_threshold_ms": 634.5399999991059,
+      "prompt_id": "open_story",
+      "text_head": " A workshop where an old machine is repaired"
+    }
+  ],
+  "series": [
+    {
+      "prompt_id": "needle_select",
+      "itl_ms": [
+        2.3241250000864966,
+        168.80591700009973,
+        167.77862499998264,
+        157.25391699993452,
+        158.17450000008648,
+        159.86145800002305,
+        159.35945799992624,
+        158.50750000004155
+      ],
+      "tiers": [
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0"
+      ],
+      "pressure": [
+        0.5022058433819815,
+        0.5022058433819815,
+        0.5022104867303716,
+        0.5022151300787618,
+        0.502219773427152,
+        0.5022244167755421,
+        0.5022290601239323,
+        0.5022337034723224
+      ],
+      "resident_mb": [
+        5914.779541015625,
+        5914.834228515625,
+        5914.888916015625,
+        5914.943603515625,
+        5914.998291015625,
+        5915.052978515625,
+        5915.107666015625,
+        5915.162353515625
+      ],
+      "t_rel": [
+        3.898385791999999,
+        4.068197458999975,
+        4.23697679199995,
+        4.395162291999895,
+        4.55428387500001,
+        4.71512666700005,
+        4.875435499999867,
+        5.03488762500001
+      ],
+      "migrations": [],
+      "transplants": [],
+      "killed": true
+    },
+    {
+      "prompt_id": "needle_second_hop",
+      "itl_ms": [
+        3.1077080000159185,
+        163.54183299995384,
+        158.03887500010205,
+        157.11637499998687,
+        156.07062499998392,
+        157.01804199989056,
+        158.47037499997896,
+        155.6089579999025
+      ],
+      "tiers": [
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0"
+      ],
+      "pressure": [
+        0.5022244167755421,
+        0.5022244167755421,
+        0.5022290601239323,
+        0.5022337034723224,
+        0.5022383468207126,
+        0.5022429901691028,
+        0.5022476335174929,
+        0.5022522768658831
+      ],
+      "resident_mb": [
+        5914.998291015625,
+        5915.052978515625,
+        5915.107666015625,
+        5915.162353515625,
+        5915.217041015625,
+        5915.271728515625,
+        5915.326416015625,
+        5915.381103515625
+      ],
+      "t_rel": [
+        2.4247257920001175,
+        2.5892197919999944,
+        2.7482586250000622,
+        2.9063842919999843,
+        3.0634015840000757,
+        3.221363291999978,
+        3.3811480839999604,
+        3.537723124999957
+      ],
+      "migrations": [],
+      "transplants": [],
+      "killed": true
+    },
+    {
+      "prompt_id": "task_order",
+      "itl_ms": [
+        2.400584000042727,
+        186.4554579997275,
+        194.75808299966957,
+        186.10833399998228,
+        166.07220800005962,
+        162.57425000003423,
+        159.9702079997769,
+        158.7691250001626
+      ],
+      "tiers": [
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0"
+      ],
+      "pressure": [
+        0.501941172523742,
+        0.501941172523742,
+        0.5019458158721323,
+        0.5019504592205224,
+        0.5019551025689126,
+        0.5019597459173027,
+        0.5019643892656929,
+        0.5019690326140831
+      ],
+      "resident_mb": [
+        5911.662353515625,
+        5911.717041015625,
+        5911.771728515625,
+        5911.826416015625,
+        5911.881103515625,
+        5911.935791015625,
+        5911.990478515625,
+        5912.045166015625
+      ],
+      "t_rel": [
+        2.186644584000078,
+        2.3740484999998444,
+        2.569749041999785,
+        2.7568269590001364,
+        2.923995499999819,
+        3.0875158750000082,
+        3.248468041999786,
+        3.4081842089999554
+      ],
+      "migrations": [],
+      "transplants": [],
+      "killed": true
+    },
+    {
+      "prompt_id": "open_explain",
+      "itl_ms": [
+        2.0595840001078614,
+        161.60325000009834,
+        167.95862499975556,
+        157.40275000007387,
+        151.62487499992494,
+        156.19870799991986,
+        155.09645799966165,
+        154.62299999990137
+      ],
+      "tiers": [
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0"
+      ],
+      "pressure": [
+        0.501346823929801,
+        0.501346823929801,
+        0.5013514672781912,
+        0.5013561106265814,
+        0.5013607539749716,
+        0.5013653973233617,
+        0.5013700406717518,
+        0.5013746840201421
+      ],
+      "resident_mb": [
+        5904.662353515625,
+        5904.717041015625,
+        5904.771728515625,
+        5904.826416015625,
+        5904.881103515625,
+        5904.935791015625,
+        5904.990478515625,
+        5905.045166015625
+      ],
+      "t_rel": [
+        1.7722294170002897,
+        1.934784375000163,
+        2.1036719580001773,
+        2.2620158750000883,
+        2.4145758750000823,
+        2.571703250000155,
+        2.727736708000066,
+        2.8833230830000502
+      ],
+      "migrations": [],
+      "transplants": [],
+      "killed": true
+    },
+    {
+      "prompt_id": "open_story",
+      "itl_ms": [
+        2.041749999989406,
+        179.66270899978554,
+        188.26045800005886,
+        245.78387500014287,
+        158.63499999977648,
+        154.0524590000132,
+        155.1290419997713,
+        158.05645799991908
+      ],
+      "tiers": [
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0",
+        "tier0"
+      ],
+      "pressure": [
+        0.5012678870071683,
+        0.5012678870071683,
+        0.5012725303555584,
+        0.5012771737039485,
+        0.5012818170523388,
+        0.5012864604007289,
+        0.5012911037491191,
+        0.5012957470975092
+      ],
+      "resident_mb": [
+        5903.732666015625,
+        5903.787353515625,
+        5903.842041015625,
+        5903.896728515625,
+        5903.951416015625,
+        5904.006103515625,
+        5904.060791015625,
+        5904.115478515625
+      ],
+      "t_rel": [
+        1.696528208000018,
+        1.877209541999946,
+        2.0664349580001726,
+        2.3133168330000444,
+        2.4731379999998353,
+        2.628142542000205,
+        2.7842292919999636,
+        2.943273124999905
+      ],
+      "migrations": [],
+      "transplants": [],
+      "killed": true
+    }
+  ],
+  "events": [
+    {
+      "t": 3.896965958999999,
+      "kind": "prefill",
+      "app": "A:needle_select",
+      "tier": "tier0",
+      "n_prompt_tokens": 475,
+      "ms": 2029.5300830000542
+    },
+    {
+      "t": 5.037798916999918,
+      "kind": "budget_violation",
+      "usage_mb": 5915.162353515625,
+      "budget_mb": 2650.0,
+      "tier": "tier0",
+      "token": 8
+    },
+    {
+      "t": 5.0378173750000315,
+      "kind": "oom_kill",
+      "app": "A:needle_select",
+      "tier": "tier0",
+      "token": 8,
+      "usage_mb": 5915.162353515625,
+      "budget_mb": 2650.0
+    },
+    {
+      "t": 7.739434458999995,
+      "kind": "prefill",
+      "app": "A:needle_second_hop",
+      "tier": "tier0",
+      "n_prompt_tokens": 479,
+      "ms": 2020.9656250001444
+    },
+    {
+      "t": 8.857819958999926,
+      "kind": "budget_violation",
+      "usage_mb": 5915.381103515625,
+      "budget_mb": 2650.0,
+      "tier": "tier0",
+      "token": 8
+    },
+    {
+      "t": 8.85783483399996,
+      "kind": "oom_kill",
+      "app": "A:needle_second_hop",
+      "tier": "tier0",
+      "token": 8,
+      "usage_mb": 5915.381103515625,
+      "budget_mb": 2650.0
+    },
+    {
+      "t": 11.304985374999887,
+      "kind": "prefill",
+      "app": "A:task_order",
+      "tier": "tier0",
+      "n_prompt_tokens": 418,
+      "ms": 1799.4827920001626
+    },
+    {
+      "t": 12.530812916999821,
+      "kind": "budget_violation",
+      "usage_mb": 5912.045166015625,
+      "budget_mb": 2650.0,
+      "tier": "tier0",
+      "token": 8
+    },
+    {
+      "t": 12.530823999999939,
+      "kind": "oom_kill",
+      "app": "A:task_order",
+      "tier": "tier0",
+      "token": 8,
+      "usage_mb": 5912.045166015625,
+      "budget_mb": 2650.0
+    },
+    {
+      "t": 14.566577000000052,
+      "kind": "prefill",
+      "app": "A:open_explain",
+      "tier": "tier0",
+      "n_prompt_tokens": 290,
+      "ms": 1382.0204999997259
+    },
+    {
+      "t": 15.681592124999952,
+      "kind": "budget_violation",
+      "usage_mb": 5905.045166015625,
+      "budget_mb": 2650.0,
+      "tier": "tier0",
+      "token": 8
+    },
+    {
+      "t": 15.681602916999964,
+      "kind": "oom_kill",
+      "app": "A:open_explain",
+      "tier": "tier0",
+      "token": 8,
+      "usage_mb": 5905.045166015625,
+      "budget_mb": 2650.0
+    },
+    {
+      "t": 17.63646525000013,
+      "kind": "prefill",
+      "app": "A:open_story",
+      "tier": "tier0",
+      "n_prompt_tokens": 273,
+      "ms": 1304.9827499999083
+    },
+    {
+      "t": 18.887165666999863,
+      "kind": "budget_violation",
+      "usage_mb": 5904.115478515625,
+      "budget_mb": 2650.0,
+      "tier": "tier0",
+      "token": 8
+    },
+    {
+      "t": 18.887176959000044,
+      "kind": "oom_kill",
+      "app": "A:open_story",
+      "tier": "tier0",
+      "token": 8,
+      "usage_mb": 5904.115478515625,
+      "budget_mb": 2650.0
+    }
+  ],
+  "footprints": {
+    "tier0": 5888.802978515625,
+    "tier1": 2142.763916015625,
+    "tier2": 1884.5855712890625
+  },
+  "config": {
+    "calibration": {
+      "mode": "dual",
+      "blend_steps": 6,
+      "schedule": "cosine",
+      "critical_mode": "frozen_ref",
+      "critical_blend_steps": 3
+    },
+    "transplant": {
+      "recompute_top_k": 6,
+      "recompute_frac": null,
+      "use_projection": true,
+      "use_scale_realign": true,
+      "use_rope_realign": true,
+      "fallback_to_reprefill": false,
+      "max_carry_tokens": null,
+      "projector_dir": "artifacts/projectors"
+    },
+    "migration": {
+      "enabled": false,
+      "allow_up_shift": true,
+      "up_shift_patience": 4,
+      "cooldown_steps": 4,
+      "down_threshold": 0.85,
+      "up_threshold": 0.55
+    },
+    "warm_ladder": false
+  },
+  "wall_s": 19.73476241699973
+}

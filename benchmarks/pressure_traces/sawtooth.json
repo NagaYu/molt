@@ -1,0 +1,48 @@
+{
+  "name": "sawtooth",
+  "description": "Repeated allocate/free cycles: exercises anti-thrash (hysteresis, cooldown, up-shift patience) and bidirectional control.",
+  "duration_s": 60.0,
+  "total_system_mb": 11778.0,
+  "events": [
+    {
+      "t": 0,
+      "budget_mb": 11778.0,
+      "label": "idle"
+    },
+    {
+      "t": 6,
+      "budget_mb": 2944.5,
+      "label": "burst 1"
+    },
+    {
+      "t": 14,
+      "budget_mb": 11778.0,
+      "label": "release 1"
+    },
+    {
+      "t": 20,
+      "budget_mb": 2944.5,
+      "label": "burst 2"
+    },
+    {
+      "t": 28,
+      "budget_mb": 11778.0,
+      "label": "release 2"
+    },
+    {
+      "t": 34,
+      "budget_mb": 2944.5,
+      "label": "burst 3"
+    },
+    {
+      "t": 42,
+      "budget_mb": 11778.0,
+      "label": "release 3"
+    },
+    {
+      "t": 60,
+      "budget_mb": 11778.0,
+      "label": "idle"
+    }
+  ]
+}

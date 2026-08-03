@@ -1,0 +1,33 @@
+{
+  "name": "spike_mid_answer",
+  "description": "A camera app launches while the assistant is halfway through a long answer, starts encoding video, then closes.  The squeeze arrives in two steps so that every rung of the ladder is exercised in one run, and it lands mid-stream on purpose: this is the case a request-boundary policy structurally cannot serve.",
+  "duration_s": 60.0,
+  "total_system_mb": 11778.0,
+  "events": [
+    {
+      "t": 0,
+      "budget_mb": 11778.0,
+      "label": "idle"
+    },
+    {
+      "t": 8,
+      "budget_mb": 2650.1,
+      "label": "camera app launches"
+    },
+    {
+      "t": 20,
+      "budget_mb": 2002.3,
+      "label": "video encoding starts"
+    },
+    {
+      "t": 34,
+      "budget_mb": 11778.0,
+      "label": "camera closes"
+    },
+    {
+      "t": 60,
+      "budget_mb": 11778.0,
+      "label": "idle"
+    }
+  ]
+}

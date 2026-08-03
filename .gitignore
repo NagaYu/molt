@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+nohup.out
+
+# Derived weights: large, regenerable, and licensed separately from this code.
+# `make projectors` rebuilds them in minutes.
+artifacts/quantized/
+artifacts/projectors/
+artifacts/proj_test/
+
+# Scratch benchmark output. The canonical run lives in benchmarks/results/ and
+# *is* tracked — the figures and the README table are generated from it, so a
+# reader must be able to check them against the data that produced them.
+benchmarks/results_*/

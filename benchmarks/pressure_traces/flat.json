@@ -1,0 +1,13 @@
+{
+  "name": "flat",
+  "description": "Control: no pressure event at all.",
+  "duration_s": 60.0,
+  "total_system_mb": 11778.0,
+  "events": [
+    {
+      "t": 0,
+      "budget_mb": 11778.0,
+      "label": "idle"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# Core (required)
+torch>=2.4
+transformers>=4.53
+accelerate>=0.30
+numpy>=1.24
+psutil>=5.9
+
+# Benchmarks and figures
+matplotlib>=3.7
+
+# Tests
+pytest>=7.4
+
+# Optional: used automatically when CUDA is present.  On CPU / Apple silicon
+# Molt falls back to its own portable INT8/INT4 implementation (molt/quantization.py).
+# bitsandbytes>=0.43
