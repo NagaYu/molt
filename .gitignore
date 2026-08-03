@@ -8,6 +8,8 @@ nohup.out
 artifacts/quantized/
 artifacts/projectors/
 artifacts/proj_test/
+# (artifacts/demo_session.json is small and *is* tracked: it is the raw event
+#  stream figures/demo.gif replays, so the animation stays checkable.)
 
 # Scratch benchmark output. The canonical run lives in benchmarks/results/ and
 # *is* tracked — the figures and the README table are generated from it, so a

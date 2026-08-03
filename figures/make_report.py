@@ -342,7 +342,24 @@ def tier_descriptions(meta: Dict[str, Any]) -> Dict[str, tuple]:
     }
 
 
-def build(data: Dict[str, Any], proj_index: Optional[Dict[str, Any]]) -> str:
+def demo_gif_data_uri(path: str) -> Optional[str]:
+    """Inline the demo animation, if it has been rendered.
+
+    Inlined rather than linked because the published page runs under a strict
+    CSP that blocks every external host; a linked GIF would silently show
+    nothing, which is the worst outcome for the one asset whose whole job is to
+    be seen.
+    """
+    import base64
+
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as fh:
+        return "data:image/gif;base64," + base64.b64encode(fh.read()).decode()
+
+
+def build(data: Dict[str, Any], proj_index: Optional[Dict[str, Any]],
+          demo_gif: Optional[str] = None) -> str:
     conds = data.get("conditions", {})
     meta = data.get("meta", {})
     fps = meta.get("footprints", {})
@@ -399,6 +416,21 @@ def build(data: Dict[str, Any], proj_index: Optional[Dict[str, Any]]) -> str:
       f'{len((conds.get("D") or {}).get("per_prompt", []))} prompts per condition, '
       "identical pressure trace for every condition.</p>")
     w("</div>")
+
+    # ---- the demo -------------------------------------------------------
+    if demo_gif:
+        w('<div class="bleed"><figure>')
+        w(f'<img class="chart" src="{demo_gif}" alt="A recorded Molt session: '
+          f'the answer streams on the 1.5B model, the memory budget is cut '
+          f'mid-sentence, and the text continues on smaller models with the '
+          f'background colour of each token showing which model wrote it." '
+          f'style="padding:0">')
+        w("<figcaption><strong>One paragraph, three models.</strong> A replay of "
+          "a recorded session &#8212; every token, timestamp and migration cost "
+          "comes from the raw event stream. The budget is cut mid-sentence; the "
+          "background colour behind each token is the rung that produced it. "
+          "Nothing restarts.</figcaption>")
+        w("</figure></div>")
 
     # ---- the trace ------------------------------------------------------
     if sD:
@@ -752,6 +784,7 @@ def main(argv=None) -> int:
     p.add_argument("--results", default="benchmarks/results")
     p.add_argument("--out", default="artifacts/report.html")
     p.add_argument("--projectors", default="artifacts/projectors")
+    p.add_argument("--demo-gif", default="figures/demo.gif")
     args = p.parse_args(argv)
 
     path = os.path.join(args.results, "summary.json")
@@ -766,7 +799,7 @@ def main(argv=None) -> int:
         with open(idx[-1]) as fh:
             proj = json.load(fh)
 
-    body = build(data, proj)
+    body = build(data, proj, demo_gif_data_uri(args.demo_gif))
     page = (f"<title>Molt &#8212; elastic on-device inference</title>\n"
             f"<style>{CSS}</style>\n{body}\n")
     # Escape every non-ASCII character as a numeric entity.  The page is embedded

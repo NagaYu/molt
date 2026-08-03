@@ -14,6 +14,7 @@ help:
 	@echo "make bench       run all conditions + cost sweep + QoS"
 	@echo "make figures     render figures, splice the README table, build the report"
 	@echo "make serve       start the streaming service on port $(PORT)"
+	@echo "make demo-gif    record a live session and render figures/demo.gif"
 	@echo "make demo        serve + open the browser demo"
 
 install:
@@ -39,6 +40,12 @@ figures:
 	python3 figures/make_figures.py --results $(OUT) --out figures
 	python3 scripts/update_readme.py --table figures/results_table.md
 	python3 figures/make_report.py --results $(OUT) --out artifacts/report.html
+
+demo-gif:
+	@echo "start the service first:  make serve"
+	python3 scripts/record_demo.py --out artifacts/demo_session.json
+	python3 scripts/make_demo_gif.py --session artifacts/demo_session.json \
+		--out figures/demo.gif
 
 serve:
 	python3 -m molt.service --ladder $(LADDER) --device $(DEVICE) --dtype $(DTYPE) \

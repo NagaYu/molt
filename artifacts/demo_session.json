@@ -1,0 +1,538 @@
+{
+ "health": {
+  "status": "ok",
+  "ladder": "qwen2.5-1.5b-ladder",
+  "tiers": [
+   {
+    "name": "tier0",
+    "label": "Qwen2.5-1.5B (fp)",
+    "tier": 0,
+    "quant": "none",
+    "est_mb": 6170.0
+   },
+   {
+    "name": "tier1",
+    "label": "Qwen2.5-1.5B (int8)",
+    "tier": 1,
+    "quant": "int8",
+    "est_mb": 1750.0
+   },
+   {
+    "name": "tier2",
+    "label": "Qwen2.5-0.5B (fp)",
+    "tier": 2,
+    "quant": "none",
+    "est_mb": 1980.0
+   }
+  ],
+  "device": "cpu",
+  "dtype": "torch.float32",
+  "budget_mb": 9422.1,
+  "worker_alive": true
+ },
+ "prompt": "Explain in a few sentences why an operating system reclaims memory from background processes.",
+ "budget_start_mb": 9422.1,
+ "events": [
+  {
+   "type": "start",
+   "tier": "tier0",
+   "tier_label": "Qwen2.5-1.5B (fp)",
+   "prompt_tokens": 17,
+   "ttft_ms": 4418.8,
+   "t": 4.4214,
+   "budget_mb": 9422.1,
+   "in_use_mb": 5889.8
+  },
+  {
+   "type": "token",
+   "text": " An",
+   "token_id": 1527,
+   "tier": "tier0",
+   "index": 0,
+   "t": 4.4274,
+   "budget_mb": 9422.1,
+   "in_use_mb": 5889.8
+  },
+  {
+   "type": "token",
+   "text": " operating",
+   "token_id": 10350,
+   "tier": "tier0",
+   "index": 1,
+   "t": 5.0795,
+   "budget_mb": 9422.1,
+   "in_use_mb": 5889.9
+  },
+  {
+   "type": "token",
+   "text": " system",
+   "token_id": 1849,
+   "tier": "tier0",
+   "index": 2,
+   "t": 5.2842,
+   "budget_mb": 9422.1,
+   "in_use_mb": 5890.0
+  },
+  {
+   "type": "token",
+   "text": " re",
+   "token_id": 312,
+   "tier": "tier0",
+   "index": 3,
+   "t": 5.434,
+   "budget_mb": 9422.1,
+   "in_use_mb": 5890.0
+  },
+  {
+   "type": "token",
+   "text": "claims",
+   "token_id": 48561,
+   "tier": "tier0",
+   "index": 4,
+   "t": 5.6368,
+   "budget_mb": 9422.1,
+   "in_use_mb": 5890.1
+  },
+  {
+   "type": "token",
+   "text": " memory",
+   "token_id": 4938,
+   "tier": "tier0",
+   "index": 5,
+   "t": 5.7848,
+   "budget_mb": 9422.1,
+   "in_use_mb": 5890.1
+  },
+  {
+   "type": "token",
+   "text": " from",
+   "token_id": 504,
+   "tier": "tier0",
+   "index": 6,
+   "t": 5.9344,
+   "budget_mb": 9422.1,
+   "in_use_mb": 5890.2
+  },
+  {
+   "type": "token",
+   "text": " background",
+   "token_id": 4004,
+   "tier": "tier0",
+   "index": 7,
+   "t": 6.0845,
+   "budget_mb": 9422.1,
+   "in_use_mb": 5890.3
+  },
+  {
+   "type": "token",
+   "text": " processes",
+   "token_id": 11364,
+   "tier": "tier0",
+   "index": 8,
+   "t": 6.2351,
+   "budget_mb": 9422.1,
+   "in_use_mb": 5890.3
+  },
+  {
+   "type": "token",
+   "text": " to",
+   "token_id": 311,
+   "tier": "tier0",
+   "index": 9,
+   "t": 6.3795,
+   "budget_mb": 2473.9,
+   "in_use_mb": 5890.4
+  },
+  {
+   "type": "migration",
+   "from": "tier0",
+   "to": "tier1",
+   "tier_label": "Qwen2.5-1.5B (int8)",
+   "at_token": 10,
+   "method": "molt",
+   "cost_ms": 261.4,
+   "flops_saved": 0.786,
+   "pressure": 0.867,
+   "t": 8.7191,
+   "budget_mb": 2473.9,
+   "in_use_mb": 2144.4
+  },
+  {
+   "type": "token",
+   "text": " free",
+   "token_id": 1910,
+   "tier": "tier1",
+   "index": 10,
+   "t": 8.7219,
+   "budget_mb": 2473.9,
+   "in_use_mb": 2144.4
+  },
+  {
+   "type": "token",
+   "text": " up",
+   "token_id": 705,
+   "tier": "tier1",
+   "index": 11,
+   "t": 9.7707,
+   "budget_mb": 2473.9,
+   "in_use_mb": 2144.5
+  },
+  {
+   "type": "token",
+   "text": " resources",
+   "token_id": 4963,
+   "tier": "tier1",
+   "index": 12,
+   "t": 10.7872,
+   "budget_mb": 2473.9,
+   "in_use_mb": 2144.5
+  },
+  {
+   "type": "token",
+   "text": " and",
+   "token_id": 323,
+   "tier": "tier1",
+   "index": 13,
+   "t": 11.8407,
+   "budget_mb": 2473.9,
+   "in_use_mb": 2144.6
+  },
+  {
+   "type": "migration",
+   "from": "tier1",
+   "to": "tier2",
+   "tier_label": "Qwen2.5-0.5B (fp)",
+   "at_token": 14,
+   "method": "molt",
+   "cost_ms": 31.1,
+   "flops_saved": 0.743,
+   "pressure": 0.762,
+   "t": 13.9425,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.4
+  },
+  {
+   "type": "token",
+   "text": " free",
+   "token_id": 1910,
+   "tier": "tier2",
+   "index": 14,
+   "t": 13.945,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.4
+  },
+  {
+   "type": "token",
+   "text": " up",
+   "token_id": 705,
+   "tier": "tier2",
+   "index": 15,
+   "t": 14.0032,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.4
+  },
+  {
+   "type": "token",
+   "text": " resources",
+   "token_id": 4963,
+   "tier": "tier2",
+   "index": 16,
+   "t": 14.0616,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.5
+  },
+  {
+   "type": "token",
+   "text": " for",
+   "token_id": 369,
+   "tier": "tier2",
+   "index": 17,
+   "t": 14.1139,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.5
+  },
+  {
+   "type": "token",
+   "text": " other",
+   "token_id": 1008,
+   "tier": "tier2",
+   "index": 18,
+   "t": 14.1663,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.5
+  },
+  {
+   "type": "token",
+   "text": " tasks",
+   "token_id": 9079,
+   "tier": "tier2",
+   "index": 19,
+   "t": 14.2184,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.6
+  },
+  {
+   "type": "token",
+   "text": ".",
+   "token_id": 13,
+   "tier": "tier2",
+   "index": 20,
+   "t": 14.2717,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.6
+  },
+  {
+   "type": "token",
+   "text": " This",
+   "token_id": 1096,
+   "tier": "tier2",
+   "index": 21,
+   "t": 14.3266,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.6
+  },
+  {
+   "type": "token",
+   "text": " is",
+   "token_id": 374,
+   "tier": "tier2",
+   "index": 22,
+   "t": 14.3855,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.6
+  },
+  {
+   "type": "token",
+   "text": " known",
+   "token_id": 3881,
+   "tier": "tier2",
+   "index": 23,
+   "t": 14.4491,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.7
+  },
+  {
+   "type": "token",
+   "text": " as",
+   "token_id": 438,
+   "tier": "tier2",
+   "index": 24,
+   "t": 14.502,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.7
+  },
+  {
+   "type": "token",
+   "text": " the",
+   "token_id": 279,
+   "tier": "tier2",
+   "index": 25,
+   "t": 14.5558,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.7
+  },
+  {
+   "type": "token",
+   "text": " principle",
+   "token_id": 17508,
+   "tier": "tier2",
+   "index": 26,
+   "t": 14.6102,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.7
+  },
+  {
+   "type": "token",
+   "text": " of",
+   "token_id": 315,
+   "tier": "tier2",
+   "index": 27,
+   "t": 14.664,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.8
+  },
+  {
+   "type": "token",
+   "text": " least",
+   "token_id": 3245,
+   "tier": "tier2",
+   "index": 28,
+   "t": 14.7171,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.8
+  },
+  {
+   "type": "token",
+   "text": " privilege",
+   "token_id": 25551,
+   "tier": "tier2",
+   "index": 29,
+   "t": 14.7699,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.8
+  },
+  {
+   "type": "token",
+   "text": ".",
+   "token_id": 13,
+   "tier": "tier2",
+   "index": 30,
+   "t": 14.823,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.8
+  },
+  {
+   "type": "token",
+   "text": " The",
+   "token_id": 576,
+   "tier": "tier2",
+   "index": 31,
+   "t": 14.8764,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.9
+  },
+  {
+   "type": "token",
+   "text": " principle",
+   "token_id": 17508,
+   "tier": "tier2",
+   "index": 32,
+   "t": 14.9305,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.9
+  },
+  {
+   "type": "token",
+   "text": " of",
+   "token_id": 315,
+   "tier": "tier2",
+   "index": 33,
+   "t": 14.9845,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1885.9
+  },
+  {
+   "type": "token",
+   "text": " least",
+   "token_id": 3245,
+   "tier": "tier2",
+   "index": 34,
+   "t": 15.0376,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1886.0
+  },
+  {
+   "type": "token",
+   "text": " privilege",
+   "token_id": 25551,
+   "tier": "tier2",
+   "index": 35,
+   "t": 15.0912,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1886.0
+  },
+  {
+   "type": "token",
+   "text": " is",
+   "token_id": 374,
+   "tier": "tier2",
+   "index": 36,
+   "t": 15.1447,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1886.0
+  },
+  {
+   "type": "token",
+   "text": " a",
+   "token_id": 264,
+   "tier": "tier2",
+   "index": 37,
+   "t": 15.1983,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1886.0
+  },
+  {
+   "type": "token",
+   "text": " security",
+   "token_id": 4763,
+   "tier": "tier2",
+   "index": 38,
+   "t": 15.2517,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1886.1
+  },
+  {
+   "type": "token",
+   "text": " principle",
+   "token_id": 17508,
+   "tier": "tier2",
+   "index": 39,
+   "t": 15.3059,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1886.1
+  },
+  {
+   "type": "token",
+   "text": " that",
+   "token_id": 429,
+   "tier": "tier2",
+   "index": 40,
+   "t": 15.3594,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1886.1
+  },
+  {
+   "type": "token",
+   "text": " states",
+   "token_id": 5302,
+   "tier": "tier2",
+   "index": 41,
+   "t": 15.4125,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1886.1
+  },
+  {
+   "type": "token",
+   "text": " that",
+   "token_id": 429,
+   "tier": "tier2",
+   "index": 42,
+   "t": 15.4662,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1886.2
+  },
+  {
+   "type": "token",
+   "text": " only",
+   "token_id": 1172,
+   "tier": "tier2",
+   "index": 43,
+   "t": 15.5188,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1.6
+  },
+  {
+   "type": "done",
+   "text": " An operating system reclaims memory from background processes to free up resources and free up resources for other tasks. This is known as the principle of least privilege. The principle of least privilege is a security principle that states that only",
+   "tokens": 44,
+   "tiers": [
+    "tier0",
+    "tier1",
+    "tier2"
+   ],
+   "migrations": 2,
+   "total_ms": 15517.7,
+   "killed": false,
+   "migration_ms": 292.6,
+   "t": 15.5195,
+   "budget_mb": 2473.9,
+   "in_use_mb": 1.6
+  },
+  {
+   "type": "end",
+   "t": 15.7145,
+   "budget_mb": 2473.9,
+   "in_use_mb": 0
+  }
+ ]
+}

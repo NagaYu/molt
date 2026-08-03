@@ -4,6 +4,13 @@
 > When the device runs out of memory, the KV cache — the animal — walks across to
 > the next size down, and the token stream never stops.**
 
+![One paragraph, three models. The budget is cut mid-sentence; the background
+colour behind each token is the model that produced it.](figures/demo.gif)
+
+*A replay of a recorded session — every token, timestamp and migration cost comes
+from the raw event stream (`artifacts/demo_session.json`). The budget is cut
+mid-sentence and the paragraph keeps going on progressively smaller models.*
+
 Molt is a research prototype for **elastic on-device inference**. A generation
 that starts on a 1.5B model and hits a memory-pressure event mid-answer does not
 get killed (the usual outcome), does not restart from the prompt (the usual
