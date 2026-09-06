@@ -451,6 +451,13 @@ Nothing here needs a GPU. The test-suite needs no downloads at all.
 pip install -r requirements.txt
 ```
 
+Works on **transformers 4.x and 5.x**. Molt reaches further into the library
+than most code does — it builds KV caches by hand and runs individual decoder
+layers — and v5 removed `from_legacy_cache`, dropped `cache_position` from the
+layer signature, and renamed the causal-mask kwarg. `molt/_compat.py` inspects
+each callable and passes only the arguments that exist, so there is no version
+switch to keep updated. Verified identical behaviour on 4.57 and 5.16.
+
 **Run the hermetic test-suite** (randomly-initialised tiny Qwen2 models,
 structurally identical to the real ladder — different depth *and* different
 head_dim — so the same code paths are exercised in seconds):

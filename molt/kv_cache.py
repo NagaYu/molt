@@ -22,6 +22,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 import torch
 from transformers.cache_utils import DynamicCache
 
+from ._compat import cache_pairs, make_dynamic_cache
 from .adapters import ModelGeometry
 
 KVPair = Tuple[torch.Tensor, torch.Tensor]
@@ -86,12 +87,9 @@ class MoltCache:
         hidden_traces: Optional[Dict[int, torch.Tensor]] = None,
         clone: bool = False,
     ) -> "MoltCache":
-        pairs: List[KVPair] = []
-        for layer in cache.layers:
-            k, v = layer.keys, layer.values
-            if k is None or v is None:
-                raise ValueError("cannot wrap a cache with uninitialised layers")
-            pairs.append((k.clone(), v.clone()) if clone else (k, v))
+        pairs = cache_pairs(cache)
+        if clone:
+            pairs = [(k.clone(), v.clone()) for k, v in pairs]
         return cls(pairs, meta, hidden_traces)
 
     @classmethod
@@ -100,7 +98,7 @@ class MoltCache:
 
     def to_hf(self, config=None) -> DynamicCache:
         """Materialise a ``DynamicCache`` the destination model can decode with."""
-        return DynamicCache.from_legacy_cache(tuple((k, v) for k, v in self.layers))
+        return make_dynamic_cache(self.layers)
 
     # -- introspection -----------------------------------------------------
     @property

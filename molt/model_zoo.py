@@ -25,6 +25,7 @@ from typing import Dict, List, Optional, Tuple
 import torch
 import torch.nn as nn
 
+from ._compat import from_pretrained_kwargs
 from .adapters import LMAdapter, ModelGeometry
 from .config import TierSpec
 from .metrics import MB, Stopwatch
@@ -180,9 +181,9 @@ class ModelZoo:
 
                 base = AutoModelForCausalLM.from_pretrained(
                     spec.model_id,
-                    dtype=self.dtype,
                     local_files_only=self.local_files_only,
                     attn_implementation="eager",
+                    **from_pretrained_kwargs(self.dtype),
                 )
                 base = base.to(self.device).eval()
             base.config.use_cache = True

@@ -28,10 +28,8 @@ import torch
 import torch.nn as nn
 from transformers.cache_utils import DynamicCache
 
-try:  # transformers >= 4.53
-    from transformers.masking_utils import create_causal_mask
-except Exception:  # pragma: no cover - older transformers
-    create_causal_mask = None
+from ._compat import (build_causal_mask, empty_cache_for,
+                      has_causal_mask_builder, run_decoder_layer)
 
 
 @dataclass(frozen=True)
@@ -104,7 +102,7 @@ class LMAdapter:
     @property
     def supports_partial_recompute(self) -> bool:
         """True when we can re-run an arbitrary layer range by hand."""
-        if self.backbone is None or create_causal_mask is None:
+        if self.backbone is None or not has_causal_mask_builder():
             return False
         if not hasattr(self.backbone, "rotary_emb") or not hasattr(self.backbone, "layers"):
             return False
@@ -166,32 +164,20 @@ class LMAdapter:
         layers = self.layers
         B, T, _ = hidden.shape
         device = hidden.device
-        cache = cache if cache is not None else DynamicCache(config=self.config)
+        cache = cache if cache is not None else empty_cache_for(self.config)
 
         cache_position = torch.arange(position_offset, position_offset + T, device=device)
         position_ids = cache_position.unsqueeze(0).expand(B, -1)
-        mask = create_causal_mask(
-            config=self.config,
-            input_embeds=hidden,
-            attention_mask=None,
-            cache_position=cache_position,
-            past_key_values=None,
-            position_ids=position_ids,
-        )
+        mask = build_causal_mask(self.config, hidden, position_ids,
+                                 cache_position=cache_position)
         pos_emb = self.backbone.rotary_emb(hidden, position_ids)
 
         h = hidden
         for i in range(start, end):
-            out = layers[i](
-                h,
-                attention_mask=mask,
-                position_ids=position_ids,
-                past_key_values=cache,
-                use_cache=True,
-                cache_position=cache_position,
-                position_embeddings=pos_emb,
-            )
-            h = out[0] if isinstance(out, tuple) else out
+            h = run_decoder_layer(layers[i], h, attention_mask=mask,
+                                  position_ids=position_ids, past_key_values=cache,
+                                  position_embeddings=pos_emb,
+                                  cache_position=cache_position)
         return h, cache
 
     # -- misc --------------------------------------------------------------
