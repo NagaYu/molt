@@ -358,8 +358,128 @@ def demo_gif_data_uri(path: str) -> Optional[str]:
         return "data:image/gif;base64," + base64.b64encode(fh.read()).decode()
 
 
+PLAYER_CSS = """
+.player{background:var(--raise);border:1px solid var(--line);border-radius:10px;
+        padding:20px 22px;margin:26px 0 8px}
+.player .out{line-height:2.1;font-size:17.5px;min-height:132px;margin-bottom:14px}
+.player .tok{border-radius:2px;padding:2px 0}
+.player .mig{display:inline-block;font-family:var(--mono);font-size:11px;
+             font-weight:600;border:1px dashed currentColor;border-radius:999px;
+             padding:1px 9px;margin:0 6px;white-space:nowrap}
+.player .bar{height:10px;border-radius:5px;background:var(--line);position:relative;
+             overflow:hidden;margin:6px 0 4px}
+.player .bar>.use{height:100%;transition:width .18s linear,background .18s}
+.player .bar>.bud{position:absolute;top:0;bottom:0;border-right:2px solid var(--alarm)}
+.player .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.player button{font:600 14px/1 var(--sans);color:var(--paper);background:var(--gauge);
+               border:none;border-radius:8px;padding:10px 18px;cursor:pointer}
+.player button.ghost{background:transparent;color:var(--ink);
+                     border:1px solid var(--line)}
+.player .meta{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+.player input[type=range]{accent-color:var(--gauge)}
+"""
+
+
+def player_block(session: Dict[str, Any]) -> str:
+    """An interactive replay of the recorded session.
+
+    Preferred over the GIF wherever scripts can run: same data, but the reader
+    controls it, and the memory gauge moving under the text is what makes the
+    causal story land.
+    """
+    payload = json.dumps({
+        "events": [
+            {k: v for k, v in e.items()
+             if k in ("type", "text", "tier", "t", "at_token", "from", "to",
+                      "cost_ms", "flops_saved", "budget_mb", "in_use_mb",
+                      "prompt_tokens", "ttft_ms", "tokens", "tiers",
+                      "migration_ms", "killed")}
+            for e in session["events"]],
+    }, separators=(",", ":"))
+    return f"""
+<div class="player" id="molt-player">
+  <div class="out" id="mp-out"><em style="opacity:.55">press play</em></div>
+  <div class="bar"><i class="use" id="mp-use" style="display:block;width:0%"></i>
+    <span class="bud" id="mp-bud" style="left:100%"></span></div>
+  <div class="meta" id="mp-meta">&nbsp;</div>
+  <div class="row">
+    <button id="mp-play">Play</button>
+    <button class="ghost" id="mp-reset">Reset</button>
+    <label class="meta">speed
+      <input id="mp-speed" type="range" min="1" max="8" step="1" value="3"></label>
+    <span class="meta" id="mp-speedv">3x</span>
+  </div>
+</div>
+<script id="mp-data" type="application/json">{payload}</script>
+<script>
+(function(){{
+  var D=JSON.parse(document.getElementById('mp-data').textContent);
+  var EV=D.events, T=EV.filter(function(e){{return e.type==='token';}});
+  var M={{}}; EV.forEach(function(e){{ if(e.type==='migration') M[e.at_token]=e; }});
+  var start=EV.find(function(e){{return e.type==='start';}})||{{}};
+  var done=EV.find(function(e){{return e.type==='done';}})||{{}};
+  var COL={{tier0:'--t0',tier1:'--t1',tier2:'--t2'}};
+  var out=document.getElementById('mp-out'), meta=document.getElementById('mp-meta');
+  var use=document.getElementById('mp-use'), bud=document.getElementById('mp-bud');
+  var btn=document.getElementById('mp-play'), rst=document.getElementById('mp-reset');
+  var sp=document.getElementById('mp-speed'), spv=document.getElementById('mp-speedv');
+  var TOP=0; EV.forEach(function(e){{ if(e.budget_mb>TOP) TOP=e.budget_mb; }});
+  var i=0,timer=null;
+  function esc(s){{return (s||'').replace(/[&<>]/g,function(c){{
+    return {{'&':'&amp;','<':'&lt;','>':'&gt;'}}[c];}});}}
+  function paint(){{
+    var h='';
+    for(var k=0;k<i;k++){{
+      var m=M[k];
+      if(m) h+='<span class="mig" style="color:var('+COL[m.to]+')">&#8646; '+
+        m.from+' &rarr; '+m.to+' &middot; '+Math.round(m.cost_ms)+' ms</span>';
+      var c='var('+COL[T[k].tier]+')';
+      h+='<span class="tok" style="background:color-mix(in srgb,'+c+
+         ' 22%,transparent);box-shadow:inset 0 -2px 0 '+c+'">'+esc(T[k].text)+'</span>';
+    }}
+    out.innerHTML=h||'<em style="opacity:.55">press play</em>';
+    var e=i?T[i-1]:start, b=e.budget_mb||TOP, u=e.in_use_mb||0;
+    use.style.width=Math.min(100,100*u/TOP)+'%';
+    use.style.background=u>b?'var(--alarm)':'var('+(COL[e.tier]||'--gauge')+')';
+    bud.style.left=Math.min(100,100*b/TOP)+'%';
+    meta.textContent=i?(i+'/'+T.length+' tokens   |   on '+e.tier+
+      '   |   '+Math.round(u).toLocaleString()+' MiB in use / '+
+      Math.round(b).toLocaleString()+' MiB budget')
+      :(start.prompt_tokens+' prompt tokens   |   TTFT '+
+        Math.round(start.ttft_ms)+' ms');
+  }}
+  function stop(){{ if(timer){{clearTimeout(timer);timer=null;}} btn.textContent='Play'; }}
+  function step(){{
+    if(i>=T.length){{ stop();
+      meta.textContent=done.tokens+' tokens   |   '+
+        (done.migrations||Object.keys(M).length)+' migration(s) costing '+
+        Math.round(done.migration_ms||0)+' ms   |   rungs '+
+        (done.tiers||[]).join(', ')+'   |   forced terminations: '+
+        (done.killed?1:0);
+      return; }}
+    var prev=i?T[i-1].t:T[0].t, gap=(T[i].t-prev)*1000/(+sp.value);
+    i++; paint();
+    timer=setTimeout(step, Math.max(35, Math.min(gap, 1400)));
+  }}
+  btn.onclick=function(){{ if(timer){{stop();return;}}
+    if(i>=T.length) i=0; btn.textContent='Pause'; step(); }};
+  rst.onclick=function(){{ stop(); i=0; paint(); }};
+  sp.oninput=function(){{ spv.textContent=sp.value+'x'; }};
+  paint();
+}})();
+</script>
+<div class="key" style="margin-top:12px">
+  <span><i style="background:var(--t0)"></i>tier0</span>
+  <span><i style="background:var(--t1)"></i>tier1</span>
+  <span><i style="background:var(--t2)"></i>tier2</span>
+  <span>the bar is memory: fill = in use, red line = the budget</span>
+</div>
+"""
+
+
 def build(data: Dict[str, Any], proj_index: Optional[Dict[str, Any]],
-          demo_gif: Optional[str] = None) -> str:
+          demo_gif: Optional[str] = None,
+          session: Optional[Dict[str, Any]] = None) -> str:
     conds = data.get("conditions", {})
     meta = data.get("meta", {})
     fps = meta.get("footprints", {})
@@ -418,7 +538,16 @@ def build(data: Dict[str, Any], proj_index: Optional[Dict[str, Any]],
     w("</div>")
 
     # ---- the demo -------------------------------------------------------
-    if demo_gif:
+    if session:
+        w('<div class="bleed"><figure>')
+        w(player_block(session))
+        w("<figcaption><strong>One paragraph, three models.</strong> A replay of "
+          "a recorded session &#8212; every token, timestamp and migration cost "
+          "comes from the raw event stream. The budget is cut mid-sentence; the "
+          "background colour behind each token is the rung that produced it. "
+          "Nothing restarts.</figcaption>")
+        w("</figure></div>")
+    elif demo_gif:
         w('<div class="bleed"><figure>')
         w(f'<img class="chart" src="{demo_gif}" alt="A recorded Molt session: '
           f'the answer streams on the 1.5B model, the memory budget is cut '
@@ -785,6 +914,11 @@ def main(argv=None) -> int:
     p.add_argument("--out", default="artifacts/report.html")
     p.add_argument("--projectors", default="artifacts/projectors")
     p.add_argument("--demo-gif", default="figures/demo.gif")
+    p.add_argument("--session", default=None,
+                   help="recorded session JSON; renders an interactive player "
+                        "instead of the GIF")
+    p.add_argument("--standalone", action="store_true",
+                   help="emit a complete HTML document (for a static host)")
     args = p.parse_args(argv)
 
     path = os.path.join(args.results, "summary.json")
@@ -799,9 +933,20 @@ def main(argv=None) -> int:
         with open(idx[-1]) as fh:
             proj = json.load(fh)
 
-    body = build(data, proj, demo_gif_data_uri(args.demo_gif))
+    session = None
+    if args.session and os.path.exists(args.session):
+        with open(args.session) as fh:
+            session = json.load(fh)
+    body = build(data, proj, None if session else demo_gif_data_uri(args.demo_gif),
+                 session)
+    css = CSS + (PLAYER_CSS if session else "")
     page = (f"<title>Molt &#8212; elastic on-device inference</title>\n"
-            f"<style>{CSS}</style>\n{body}\n")
+            f"<style>{css}</style>\n{body}\n")
+    if args.standalone:
+        page = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+                '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+                '<title>Molt \u2014 elastic on-device inference</title>\n'
+                f'<style>{css}</style>\n</head>\n<body>\n{body}\n</body>\n</html>\n')
     # Escape every non-ASCII character as a numeric entity.  The page is embedded
     # into a host document whose charset we do not control, and an em-dash that
     # renders as "â€"" is a worse bug than it looks: it is silent, it survives

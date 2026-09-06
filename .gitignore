@@ -8,6 +8,7 @@ nohup.out
 artifacts/quantized/
 artifacts/projectors/
 artifacts/proj_test/
+artifacts/hf-dataset/
 # (artifacts/demo_session.json is small and *is* tracked: it is the raw event
 #  stream figures/demo.gif replays, so the animation stays checkable.)
 

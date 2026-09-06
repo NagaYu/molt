@@ -40,6 +40,8 @@ figures:
 	python3 figures/make_figures.py --results $(OUT) --out figures
 	python3 scripts/update_readme.py --table figures/results_table.md
 	python3 figures/make_report.py --results $(OUT) --out artifacts/report.html
+	python3 figures/make_report.py --results $(OUT) --standalone \
+		--session artifacts/demo_session.json --out artifacts/space/index.html
 
 demo-gif:
 	@echo "start the service first:  make serve"

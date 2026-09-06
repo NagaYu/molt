@@ -11,6 +11,10 @@ colour behind each token is the model that produced it.](figures/demo.gif)
 from the raw event stream (`artifacts/demo_session.json`). The budget is cut
 mid-sentence and the paragraph keeps going on progressively smaller models.*
 
+**[Interactive demo](https://huggingface.co/spaces/NagaYu/molt)** ·
+**[Projectors](https://huggingface.co/NagaYu/molt-kv-projectors-qwen2.5)** ·
+**[Measurements](https://huggingface.co/datasets/NagaYu/molt-benchmark-results)**
+
 Molt is a research prototype for **elastic on-device inference**. A generation
 that starts on a 1.5B model and hits a memory-pressure event mid-answer does not
 get killed (the usual outcome), does not restart from the prompt (the usual
