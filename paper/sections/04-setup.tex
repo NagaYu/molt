@@ -1,0 +1,52 @@
+\section{Experimental setup}\label{sec:setup}
+
+\paragraph{Models.}
+We use Qwen2.5 Instruct~\citep{qwen25} in the 4-bit MLX builds an app would ship.
+The pairs, large to small (the direction memory pressure forces), are 3B$\to$1.5B (matched KV geometry: 2 KV heads, $d_h=128$) and 1.5B$\to$0.5B (mismatched: $d_h$ 128$\to$64).
+Mappers are fitted on these exact 4-bit weights.
+All three sizes share one tokenizer, which we checked by vocabulary hash.
+Decoding is greedy, so conditions differ only in what the switch did.
+
+\paragraph{Conditions.}
+All conditions run on one machine.
+Each run is a separate process, so no condition inherits another's allocator state.
+\begin{itemize}
+\item \textbf{A} restart: discard the generation and start over on the small model.
+\item \textbf{A$'$} re-prefill: release, load small, and re-read the prompt plus everything shown so far. This baseline is added because it is the obvious alternative; it is not one of the four named in the brief.
+\item \textbf{B} always small.
+\item \textbf{C} the closed-form map of~\citep{heo2026crossmodel} applied at the token boundary, with the selected $k^*$, in hand-off shape (colocated) and without anchors.
+\item \textbf{D} molt: the same mapper, the ordered schedule and the held-out-selected anchors.
+\end{itemize}
+Ablations change one factor each:
+C$+$ordered isolates the schedule, D$+$colocated the anchors, D with the depth-linear mapper the mapper.
+D with del-only and D with clear-no-wait test the naive freeing variants.
+
+\paragraph{Jetsam emulation.}
+A separate C process polls the worker's \texttt{proc\_pid\_rusage} at about 1\,kHz.
+It records the instantaneous phys\_footprint and the kernel ledger's lifetime maximum (\texttt{ri\_lifetime\_max\_phys\_footprint}), and sends \texttt{SIGKILL} the moment either exceeds the cap.
+The lifetime maximum cannot miss a spike between samples.
+Phase labels written by the worker attribute every sample to a phase.
+
+\paragraph{Experiments.}
+\emph{I (intrinsic)}: teacher-forced NLL of 128 held-out tokens after the switch, on the FineWeb-Edu evaluation split, at boundary positions $P\in\{32,128,256,512,768\}$.
+\emph{Q (quality)}: no cap, with the switch at a fixed token per item.
+The suite has GSM8K~\citep{cobbe2021gsm8k} (switch at token 32, mid-reasoning), a needle task with 14 similar records (switch right before the answer value), and open-ended explanations (switch at token 48).
+\emph{M (memory)}: a cap of $S+h$, where $S$ is the measured footprint of the big model decoding, swept over $h$; demand arrives as in \cref{sec:problem}.
+
+\paragraph{Metrics.}
+\begin{itemize}
+\item \textbf{Survival}: the run was not killed.
+\item \textbf{Lost tokens}: tokens shown and then retracted.
+\item \textbf{Visible seam}: the jump in judge NLL across the boundary, $\overline{\text{NLL}}[b,b{+}16)-\overline{\text{NLL}}[b{-}16,b)$, reported relative to A$'$; and human ratings, which are pending.
+\item \textbf{Continuation quality}: task accuracy, with a killed run scoring 0 and never dropped, plus judge top-1 agreement after the boundary. The judge is the pair's large model.
+\item \textbf{Time to resume}: from trigger to the next shown token. For A, the time until new content appears.
+\item \textbf{Peak footprint during migration}: kernel lifetime maximum.
+\item \textbf{Energy}: CPU energy per process (\texttt{ri\_energy\_nj}) and GPU energy system-wide from IOReport minus an idle baseline (\cref{app:energy}).
+\end{itemize}
+Throughput is recorded but is not a primary metric.
+Every aggregate carries a 95\% bootstrap interval, paired by item where two conditions are compared.
+
+\paragraph{Platform.}
+Reported per run in the result files: \res{env.machine}.
+Other users' processes were running during the measurements and swap was nearly full (\cref{sec:limits}).
+Timings are reported but should be read with that in mind; footprint and survival are not affected.

@@ -1,0 +1,12 @@
+\section{Reproducing every number}\label{app:repro}
+\begin{verbatim}
+python -m pytest mlx/tests --import-mode=importlib     # every module's selftest + peak test
+python -m bench.fit_mappers --pair 1.5b-0.5b           # fit, sweep, select (held-out only)
+python -m bench.intrinsic   --pair 1.5b-0.5b           # experiment I
+python -m bench.run_quality --pair 1.5b-0.5b           # experiment Q (one process per shard)
+python -m bench.run_memory  --pair 1.5b-0.5b           # experiment M (one process per run)
+python -m bench.score       --pair 1.5b-0.5b           # judge scores
+python -m bench.analyze && python figures/make_figures.py   # summary, figures, this paper's macros
+cd ios && swift run MoltCoreSelfTest                   # Swift core
+\end{verbatim}
+Figures and every number in the text are produced by the last command from \texttt{bench/results}; none is typed by hand.

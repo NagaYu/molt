@@ -1,0 +1,41 @@
+# XcodeGen spec:  brew install xcodegen && cd ios/App && xcodegen && open MoltBench.xcodeproj
+name: MoltBench
+options:
+  bundleIdPrefix: dev.molt
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  MoltCore:
+    path: ..
+  mlx-swift:
+    url: https://github.com/ml-explore/mlx-swift
+    from: 0.25.0
+  mlx-swift-examples:
+    url: https://github.com/ml-explore/mlx-swift-examples
+    from: 2.25.0
+targets:
+  MoltBench:
+    type: application
+    platform: iOS
+    sources:
+      - path: .
+        excludes: ["project.yml", "*.entitlements"]
+      - path: ../MoltMLX
+    dependencies:
+      - package: MoltCore
+      - package: mlx-swift
+        product: MLX
+      - package: mlx-swift-examples
+        product: MLXLLM
+      - package: mlx-swift-examples
+        product: MLXLMCommon
+    info:
+      path: Info.plist
+      properties:
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UILaunchScreen: {}
+    settings:
+      base:
+        CODE_SIGN_ENTITLEMENTS: MoltBench.entitlements
+        SWIFT_VERSION: "5.9"

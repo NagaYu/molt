@@ -1,0 +1,47 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+% Every result number is a macro written by figures/make_figures.py from the
+% measured JSON in bench/results.  A key that was not measured renders as a
+% visible red PENDING marker instead of silently disappearing.
+\newcommand{\res}[1]{\ifcsname res:#1\endcsname\csname res:#1\endcsname\else\textcolor{red}{\textbf{PENDING}}\fi}
+\newcommand{\pending}[1]{\textcolor{red}{\textbf{PENDING:}}~#1}
+\InputIfFileExists{generated/results.tex}{}{}
+
+\title{Mid-Decode Model Migration Under a Per-App Memory Limit:\\
+Moving a Generation to a Smaller Model Without Holding Both}
+\author{NagaYu\thanks{Code, mappers and raw measurements: \url{https://github.com/NagaYu/molt}.
+\ Draft generated \today; device results pending (see \cref{sec:limits}).}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\input{sections/00-abstract}
+\input{sections/01-intro}
+\input{sections/02-problem}
+\input{sections/03-method}
+\input{sections/04-setup}
+\input{sections/05-results}
+\input{sections/06-failures}
+\input{sections/07-limits}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\appendix
+\input{sections/A-mlx-memory}
+\input{sections/B-reproduce}
+\end{document}

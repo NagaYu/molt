@@ -1,0 +1,17 @@
+\begin{abstract}
+\noindent\textbf{Prior work first.}
+Closed-form ridge maps between the KV caches of different-size models in one family were introduced by Heo et al.~\citep{heo2026crossmodel}.
+They apply them at the \emph{prefill hand-off point}.
+DroidSpeak~\citep{liu2024droidspeak} shares KV caches between models that have the same architecture and are fine-tuned from the same base.
+This paper adds no new mapping and claims nothing about mapping quality.
+Its scope is limited to three conditions that this prior work does not address:
+the switch happens \emph{mid-decode}, between two tokens of one generation;
+it happens \emph{under memory exhaustion}, triggered by the app's distance to its own per-process limit;
+and the two models are \emph{never resident together}.
+
+We implement this setting in MLX on Apple silicon and test it against an external jetsam emulator.
+We compare it with restart, always-small, re-prefill, and the closed-form ridge map of~\citep{heo2026crossmodel} applied mid-decode.
+That last baseline is reproduced to the letter and runs in the hand-off shape, with both models loaded.
+Results are \res{abs.summary}.
+iPhone measurements, energy on device, and human ratings are \pending{not yet collected}.
+\end{abstract}

@@ -16,3 +16,23 @@ artifacts/hf-dataset/
 # *is* tracked — the figures and the README table are generated from it, so a
 # reader must be able to check them against the data that produced them.
 benchmarks/results_*/
+
+# v0.2 (MLX) ------------------------------------------------------------------
+ios/.build/
+ios/App/*.xcodeproj/
+build/
+# fitted mappers are published on Hugging Face (NagaYu/molt-kv-projectors-qwen2.5);
+# only their manifests are tracked here
+artifacts/mlx/mappers/**/*.safetensors
+# raw watchdog timelines (1 kHz) and per-token progress logs are large; the
+# per-run JSON records that summarise them are tracked
+bench/results/raw/**/*.csv
+bench/results/raw/**/*.progress.jsonl
+bench/results/raw/**/*.phase
+bench/results/raw/**/*.ready
+bench/results/*.log
+paper/*.aux
+paper/*.log
+paper/*.bbl
+paper/*.blg
+paper/*.out

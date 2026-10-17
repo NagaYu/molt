@@ -1,0 +1,60 @@
+\section{Method}\label{sec:method}
+
+\subsection{The mapping (prior work, condition C)}\label{sec:heo}
+We reproduce the recipe of~\citep{heo2026crossmodel} as written.
+\begin{itemize}
+\item \emph{Features.} Per source layer, all KV heads are flattened. Keys have the source RoPE removed; values are used as is.
+\item \emph{Targets.} The destination's own keys (RoPE removed) and values, per layer and head.
+\item \emph{Regression.} Centred ridge with $\lambda=0.01$ and bias $b=\bar y-\bar xW$. Covariance is accumulated in float32 and solved in float64.
+\item \emph{Data.} 500 FineWeb-Edu~\citep{penedo2024fineweb} sequences of 1\,024 tokens, sub-sampled with stride 4.
+\item \emph{Source selection.} For each destination layer, the top-$k$ source layers are kept by a fixed ranking: head-averaged single-source $R^2$, averaged over K and V.
+\end{itemize}
+Keys are re-rotated with the destination RoPE at the same absolute positions.
+
+We had to make two interpretations, and we state both.
+(i) The text writes $X^\top X+\lambda I$ without saying whether $X^\top X$ is normalised.
+On $\sim$128\,K rows an unnormalised Gram matrix would make $\lambda=0.01$ a no-op, and their reported collapse at $\lambda=1$ could not happen.
+We therefore read $X^\top X$ as the centred covariance and also sweep $\lambda$ (\cref{tab:lambda}).
+(ii) Heo et al.\ choose $k$ by downstream accuracy.
+We choose $k$ by held-out prefix-KV negative log-likelihood (NLL), measured on documents disjoint from both the calibration and the evaluation splits.
+
+Implementation checks in \texttt{fit.selftest} and \texttt{migrate.selftest}:
+a planted linear map is recovered to $R^2=1$;
+the $R^2$ computed from sufficient statistics equals the $R^2$ of actually applying the fitted mapper to within $10^{-7}$;
+and with an identity mapper, transplanting reproduces a native re-prefill to within $1.4\times10^{-6}$.
+
+\subsection{Mid-decode transplant}\label{sec:transplant}
+The decode loop keeps one invariant: the cache holds KV for exactly the tokens fed so far, and \texttt{pending} is the token already shown to the user but not yet fed.
+At a switch the receiver gets the mapped cache and feeds \texttt{pending} itself, so no shown token is retracted.
+Molt adds two optional \emph{anchors}, which we treat as engineering choices and not as contributions.
+\begin{itemize}
+\item The first $s$ positions are replaced by the receiver's native KV. This is exact, because causal positions depend only on earlier tokens; it follows the sink observation of~\citep{xiao2023streamingllm}.
+\item The last $t$ positions are re-fed natively over the mapped history.
+\end{itemize}
+Setting $t=\text{all}$ gives re-prefill (condition A$'$).
+$s$ and $t\le 32$ are chosen on held-out text only.
+
+\subsection{The memory order (the claim)}\label{sec:order}
+Releasing a model on MLX is not one call.
+We measured three facts (\cref{app:mlx}).
+(1) After \texttt{del}, buffers stay in MLX's allocator cache and are not reused for arrays of other sizes.
+(2) \texttt{mx.clear\_cache()} right after \texttt{del} can free nothing, because a buffer returns to the cache only after the GPU has finished the last command buffer that used it.
+(3) After synchronising and clearing, the OS still reclaims the memory asynchronously, in about $10^2$\,ms.
+The \emph{ordered} schedule therefore runs as follows:
+\begin{enumerate}
+\item snapshot the source KV;
+\item drop the source weights, synchronise, clear, and poll phys\_footprint until it has fallen by 90\% of the source weight bytes;
+\item load the mapper and map;
+\item drop the mapper and source KV the same way;
+\item load the receiver;
+\item apply the anchors and resume.
+\end{enumerate}
+\Cref{tab:schedules} lists the three alternatives we measure against it.
+\emph{colocated} is the prefill hand-off shape.
+\emph{del-only} is the natural ``drop it, then load''.
+\emph{clear-no-wait} is the call a developer would write.
+
+\paragraph{The trigger.}
+Before every token the loop reads the headroom, which is \texttt{os\_proc\_available\_memory()} on iOS and $\text{cap}-\text{phys\_footprint}$ on the Mac.
+It migrates when the headroom falls below what \emph{the chosen schedule} needs plus the next demand chunk.
+Each schedule thus gets its own best trigger, and a co-resident schedule is never killed merely for reacting late.

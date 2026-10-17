@@ -1,0 +1,19 @@
+\section{What freeing a model costs on MLX}\label{app:mlx}
+All three facts below are measured by \texttt{mlx/molt\_mlx/footprint.py::selftest} on every run of the test suite.
+\begin{enumerate}
+\item A 256\,MiB MLX array adds \res{mlx.alloc_fp}\,MiB to phys\_footprint, while total RSS is \res{mlx.alloc_rss}\,MiB.
+\item After \texttt{del} the footprint is unchanged (+\res{mlx.after_del}\,MiB).
+\texttt{mx.clear\_cache()} immediately after \texttt{del}, followed by a 300\,ms sleep, freed the buffer in only \res{mlx.clear_alone_freed} of \res{mlx.release_runs} runs; in the others the footprint stayed up by as much as +\res{mlx.after_clear_max}\,MiB.
+Whether it frees depends on whether the GPU has finished with the buffer, so it is not something to rely on.
+\item \texttt{mx.synchronize()}, then \texttt{clear\_cache()}, then polling returned the memory every time, with a median of \res{mlx.release_ms}\,ms (range \res{mlx.release_ms_min}--\res{mlx.release_ms_max}\,ms).
+\end{enumerate}
+The peak-footprint test (\texttt{mlx/tests/test\_peak\_footprint.py}) runs each schedule in its own process under a cap of (source-resident footprint $+$ 40\,MiB).
+The models are a synthetic \res{peak.src_mib}\,MiB source and a \res{peak.dst_mib}\,MiB destination, so the cap is below source plus destination.
+Ordered peaks at \res{peak.ordered_mib}\,MiB under a \res{peak.cap_mib}\,MiB cap; colocated and del-only are killed in \texttt{load\_dst}.
+clear-no-wait survived \res{peak.cnw_survived} of 3 runs at this size, so it is \emph{not} shown to fail there; the full-size result is in \cref{sec:results-memory}.
+
+\section{Energy without root}\label{app:energy}
+\texttt{ri\_energy\_nj} counts CPU energy only: a busy MLX matmul loop reads \res{energy.gpu_loop_proc_w}\,W in it.
+IOReport's ``GPU Energy'' channel reads \res{energy.gpu_loop_gpu_w}\,W for the same loop, with no root required.
+Energy is reported as these two named parts and never summed silently.
+DRAM energy is unavailable without \texttt{powermetrics}; \texttt{bench/powermetrics.sh} is the root cross-check.

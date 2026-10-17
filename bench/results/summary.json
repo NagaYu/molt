@@ -1,0 +1,113 @@
+{
+ "pairs": {
+  "3b-1.5b": {
+   "fit": null,
+   "intrinsic": null,
+   "quality": null,
+   "memory": null
+  },
+  "1.5b-0.5b": {
+   "fit": null,
+   "intrinsic": null,
+   "quality": null,
+   "memory": null
+  }
+ },
+ "facts": {
+  "platform": {
+   "mlx": {
+    "alloc_fp": 261.8594665527344,
+    "alloc_rss": 31.65625,
+    "after_del": 261.8594665527344,
+    "after_clear": 261.8907165527344,
+    "release_ms": 163.39720800169744,
+    "released": true,
+    "release_ms_min": 0.03945900243707001,
+    "release_ms_max": 257.1448750095442,
+    "release_runs": 5,
+    "after_clear_max": 261.8907165527344,
+    "after_clear_runs": [
+     261.8907165527344,
+     256.0625,
+     0.015625,
+     256.0,
+     256.015625
+    ],
+    "clear_alone_freed": 1
+   },
+   "energy": {
+    "gpu_baseline_w": 2.9031012,
+    "gpu_loop_gpu_w": 12.152545562427722,
+    "gpu_loop_proc_w": 0.026524203113660105,
+    "cpu_loop_proc_w": 2.859401895577642
+   },
+   "machine": {
+    "chip": "Apple M2",
+    "ram_gib": 16.0,
+    "os": "macOS 27.0.1",
+    "python": "3.13.15",
+    "mlx": "0.31.2",
+    "mlx_lm": "0.31.3",
+    "loadavg": [
+     7.98,
+     10.47,
+     12.1
+    ],
+    "time": "2026-10-17T21:26:12+0900"
+   }
+  },
+  "peak_test": {
+   "ordered": {
+    "peak_mib": 693.6734085083008,
+    "sampled_peak_mib": 693.6734085083008,
+    "cap_mib": 734.3140563964844,
+    "src_mib": 290.083984375,
+    "dst_mib": 109.112548828125,
+    "phases": {
+     "-": 346.43880462646484,
+     "load_src": 638.3296356201172,
+     "decode_src": 693.6734085083008,
+     "snapshot": 693.6734085083008,
+     "release_src": 693.6734085083008,
+     "load_mapper": 357.17322540283203,
+     "map": 376.3138732910156,
+     "load_dst": 467.3139419555664,
+     "transplant": 483.7358169555664,
+     "decode_dst": 484.2670669555664,
+     "done": 485.1420669555664
+    },
+    "max_gap_ms": 27.596
+   },
+   "colocated": {
+    "killed": true,
+    "killed_in": "load_dst",
+    "cap_mib": 734.3140563964844,
+    "kill_reason": "sample"
+   },
+   "del_only": {
+    "killed": true,
+    "killed_in": "load_dst",
+    "cap_mib": 734.3140563964844,
+    "kill_reason": "sample"
+   },
+   "clear_no_wait": {
+    "runs": [
+     {
+      "killed": false,
+      "peak_mib": 694
+     },
+     {
+      "killed": false,
+      "peak_mib": 695
+     },
+     {
+      "killed": false,
+      "peak_mib": 691
+     }
+    ],
+    "cap_mib": 734.3140563964844
+   }
+  }
+ },
+ "device": []
+}

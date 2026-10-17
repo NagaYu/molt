@@ -1,0 +1,35 @@
+\section{Scope and prior work}\label{sec:intro}
+
+\paragraph{What is not ours.}
+Mapping one model's KV cache into another model's geometry is prior work.
+Heo et al.~\citep{heo2026crossmodel} fit, for every target layer and KV head, separate key and value maps in closed form by ridge regression ($\lambda=0.01$).
+The input is the concatenated KV heads of the top-$k$ source layers, ranked by single-source $R^2$.
+Keys have RoPE~\citep{su2021roformer} removed before the map and re-applied after it.
+The transfer happens at the \emph{prefill hand-off point}: the receiver gets the sender's prefix cache and decodes from there.
+Their main results are small-to-large over matched KV geometry.
+Large-to-small is reported only on HellaSwag, where one pair keeps 37\% of standalone accuracy.
+DroidSpeak~\citep{liu2024droidspeak} reuses KV caches between models that share an architecture and a foundation model.
+It recomputes selected layers and reuses the rest, at prefill time.
+Re-reading a transcript with a new model (re-prefill) is a standard alternative, and we treat it as a baseline.
+Keeping the first tokens because attention concentrates on them follows StreamingLLM~\citep{xiao2023streamingllm}.
+
+\paragraph{What this paper claims, and only this.}
+We study one situation.
+An on-device app is in the middle of generating an answer with a model that nearly fills the app's memory budget.
+Then something else in the app needs memory.
+On iOS the app is killed once it crosses its per-process limit~\citep{apple_jetsam}.
+The goal is to continue \emph{the same sentence} with a smaller model, with no retracted tokens and no termination.
+The contribution is restricted to three conditions:
+\begin{enumerate}
+\item \textbf{Mid-decode.} The switch happens between two tokens of one generation. The receiver takes the sender's cache for every token fed so far and itself feeds the token already shown to the user.
+\item \textbf{Under memory exhaustion.} The switch is triggered by the app's headroom to its own limit (\texttt{os\_proc\_available\_memory}~\citep{apple_os_proc_available_memory}), polled before every token, before the limit is crossed.
+\item \textbf{Non-co-resident.} Sender and receiver weights are never resident together. We show what this requires on MLX~\citep{mlx2023} and test that the kernel-tracked peak footprint stays under the cap.
+\end{enumerate}
+Nothing else in this paper is claimed as new.
+That includes the mapping, its fitting procedure, RoPE handling, re-prefill and sink tokens.
+
+\paragraph{The question that decides whether there is a claim at all.}
+If the simple method is enough in this setting, molt has nothing to claim.
+The simple method is the closed-form map of~\citep{heo2026crossmodel} applied at the token boundary.
+We therefore reproduce it without shortcuts (condition C) and measure where it is and is not enough.
+\Cref{sec:failures} states plainly where our own hypothesis fails.

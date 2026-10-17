@@ -1,0 +1,22 @@
+\section{Limitations}\label{sec:limits}
+\begin{itemize}
+\item \textbf{No iPhone results yet.}
+Every number in this draft comes from an M2 Mac with a jetsam \emph{emulator}.
+The device protocol is written and its platform core is self-tested on macOS (\texttt{ios/}).
+It covers the Memory Budget Test that reproduces real kills, Instruments traces, and at least three device generations.
+The app itself has not been compiled or run, because the build machine's Xcode license is not accepted and no device is attached.
+The simulator is not used: it enforces no per-app limit.
+Real limits, the \texttt{increased-memory-limit} entitlement, and iOS's own reclaim timing could all move the band of \cref{sec:results-memory}.
+\item \textbf{A shared, overloaded machine.}
+Other users' processes kept swap nearly full throughout.
+Footprint, survival and quality are unaffected.
+Times and GPU energy are inflated and noisy, and are reported with the machine's load average.
+\item \textbf{Energy is partial.}
+CPU energy is per process.
+GPU energy is system-wide minus an idle baseline.
+DRAM energy is missing.
+A \texttt{powermetrics} cross-check is pending.
+\item \textbf{Human ratings are pending.}
+The seam is measured only with a model judge, which is the pair's own large model.
+\item \textbf{Scope.} One model family (Qwen2.5), 4-bit weights, greedy decoding, English text.
+\end{itemize}

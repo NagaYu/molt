@@ -1,0 +1,29 @@
+\section{The setting}\label{sec:problem}
+
+\paragraph{The limit an app actually faces.}
+Apple documents \texttt{os\_proc\_available\_memory()} as ``the current memory limit minus the memory footprint of your app''.
+It returns 0 once the limit is exceeded.
+The limit can change during the app's life cycle, and the value is advisory and should not be cached~\citep{apple_os_proc_available_memory}.
+A jetsam event report records the reason for a termination.
+\texttt{per-process-limit} means the app crossed the limit imposed on all apps; \texttt{vm-pageshortage} means system-wide pressure~\citep{apple_jetsam}.
+The UIKit memory warning~\citep{apple_memwarning} and the dispatch memory-pressure source~\citep{apple_pressure_source} report \emph{system} memory pressure.
+We found no documentation that promises either one fires before a \texttt{per-process-limit} termination.
+Some devices honour a larger limit under the \texttt{increased-memory-limit} entitlement~\citep{apple_increased_limit}.
+The quantity the limit is checked against is the physical footprint.
+On Apple silicon, MLX tensors sit in Metal buffers that the resident set size barely counts.
+We measured a 1\,GiB MLX array moving RSS by $\approx$0\,MiB and the footprint by $\approx$1\,GiB.
+Every memory number in this paper is therefore phys\_footprint, never RSS.
+
+\paragraph{The event.}
+A generation runs on model $S$, whose footprint leaves headroom $h$ under the limit.
+At token $n_p$, the app's other work starts to need $B$ more memory, arriving in chunks of 64\,MiB per token.
+$B$ exceeds $h$, so $S$ cannot stay, while the smaller model $T$ plus $B$ fits.
+A condition survives if its footprint never exceeds the limit.
+A co-resident switch needs about $T$'s weights plus the mapper in spare memory at the moment it starts.
+A non-co-resident switch needs only the KV caches and the mapper.
+The interesting band is
+\[
+  \underbrace{\text{chunk} + \text{margin}}_{\text{ordered needs}} \;\le\; h \;<\; \underbrace{w_T + w_{\text{map}} + \text{margin}}_{\text{co-resident needs}},
+\]
+where one schedule survives and the other cannot.
+\Cref{sec:results-memory} measures whether the band exists and how wide it is for real tiers.
