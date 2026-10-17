@@ -14,7 +14,8 @@ MLX_DIR = ROOT / "mlx"
 if str(MLX_DIR) not in sys.path:
     sys.path.insert(0, str(MLX_DIR))
 
-RESULTS = ROOT / "bench" / "results"
+# overridable so the reporting chain can be tested on synthetic results
+RESULTS = Path(os.environ.get("MOLT_RESULTS", ROOT / "bench" / "results"))
 CACHE = Path(os.path.expanduser("~/.cache/molt"))
 ARTIFACTS = ROOT / "artifacts" / "mlx"
 

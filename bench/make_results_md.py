@@ -12,7 +12,9 @@ values the paper's \\res{key} macros print.  An unmeasured key renders as
 from __future__ import annotations
 
 import json
+import os
 import re
+from pathlib import Path
 
 from bench._env import RESULTS, ROOT
 
@@ -123,7 +125,10 @@ def main():
             + (", ".join(S.get("device") or []) or "none") + ".",
             "- `powermetrics` cross-check: **PENDING** (needs sudo; `bench/powermetrics.sh`).",
             "- Human seam ratings: **PENDING** (`bench/human_eval/`).", ""]
-    (ROOT / "RESULTS.md").write_text("\n".join(out))
+    out_md = Path(os.environ.get("MOLT_RESULTS_MD", ROOT / "RESULTS.md"))
+    out_md.write_text("\n".join(out))
+    if os.environ.get("MOLT_RESULTS_MD"):
+        return                              # test mode: leave README alone
     # README block: the headline numbers only, from macros
     readme = (ROOT / "README.md").read_text()
     glance = ROOT / "bench" / "README.glance.md"

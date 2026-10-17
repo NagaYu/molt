@@ -13,6 +13,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import os
 import sys
 from pathlib import Path
 
@@ -22,9 +23,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-RES = ROOT / "bench" / "results"
-FIG = ROOT / "figures" / "paper"
-GEN = ROOT / "paper" / "generated"
+RES = Path(os.environ.get("MOLT_RESULTS", ROOT / "bench" / "results"))
+FIG = Path(os.environ.get("MOLT_FIG_DIR", ROOT / "figures" / "paper"))
+GEN = Path(os.environ.get("MOLT_GEN_DIR", ROOT / "paper" / "generated"))
 FIG.mkdir(parents=True, exist_ok=True)
 GEN.mkdir(parents=True, exist_ok=True)
 
