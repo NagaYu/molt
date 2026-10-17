@@ -91,6 +91,10 @@ if pf:
             M[f"mlx.{k}"] = str(pf["mlx"][k])
     for k, v in pf["energy"].items():
         put(f"energy.{k}", v, 2)
+    if pf.get("identity"):
+        idt = pf["identity"]
+        M["id.same"] = str(idt["identical_continuations"]); M["id.items"] = str(idt["items"])
+        put("id.maxdiff", idt["max_logit_diff"], 3); M["id.tokens"] = str(idt["continuation_tokens"])
     mc = pf["machine"]
     M["env.machine"] = f"{mc['chip']}, {mc['ram_gib']:.0f} GB, {mc['os']}, MLX {mc['mlx']}, mlx-lm {mc['mlx_lm']}"
 pt = (S["facts"] or {}).get("peak_test")
@@ -208,7 +212,7 @@ for row, pair in enumerate(pairs or ["-"]):
             vals.append(cc["mean"] if cc else float("nan"))
             los.append(cc["mean"] - cc["lo"] if cc else 0); his.append(cc["hi"] - cc["mean"] if cc else 0)
         ax.bar(range(len(conds)), vals, yerr=[los, his], color=[COLORS[c] for c in conds], capsize=2)
-        ax.set_xticks(range(len(conds))); ax.set_xticklabels([c.replace("_", "\n") for c in conds], fontsize=7)
+        ax.set_xticks(range(len(conds))); ax.set_xticklabels([c.replace("A2", "A′").replace("_", "\n") for c in conds], fontsize=7)
         ax.set_title(f"{PAIR_LABEL[pair]}: {title}", fontsize=9); ax.set_ylim(0, 1)
     for c in conds:
         cq = q["conds"][c]

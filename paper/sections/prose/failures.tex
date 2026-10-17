@@ -13,6 +13,8 @@ molt's anchors make the seam smaller than C's.
 Paired agreement is $+$\res{qp.15b-05b.D.C.agree_post}, CI \res{qp.15b-05b.D.C.agree_post.ci}, and the seam is \res{qp.15b-05b.D.C.jump}~nats, CI \res{qp.15b-05b.D.C.jump.ci}.
 Task score does not move: \res{qp.15b-05b.D.C.task}, CI \res{qp.15b-05b.D.C.task.ci}.
 ``Better than C'' and ``good enough'' are different claims, and only the first one holds here.
+This is not an implementation fault.
+The same code path with an identity map on one model reproduces native decoding on \res{id.same} of \res{id.items} needle items (\cref{sec:heo}), so the loss comes from the cross-model map.
 The teacher-forced gap of about a tenth of a nat per token (\cref{sec:results-intrinsic}) understates this badly: it compounds once the receiver generates freely.
 
 \paragraph{Re-prefill is the better switch in exactly the setting we claim.}

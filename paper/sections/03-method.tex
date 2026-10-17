@@ -21,7 +21,9 @@ We choose $k$ by held-out prefix-KV negative log-likelihood (NLL), measured on d
 Implementation checks in \texttt{fit.selftest} and \texttt{migrate.selftest}:
 a planted linear map is recovered to $R^2=1$;
 the $R^2$ computed from sufficient statistics equals the $R^2$ of actually applying the fitted mapper to within $10^{-7}$;
-and with an identity mapper, transplanting reproduces a native re-prefill to within $1.4\times10^{-6}$.
+and with an identity mapper, transplanting reproduces a native re-prefill to within $1.4\times10^{-6}$ on the test models.
+On the real 4-bit Qwen2.5-0.5B, mapping its own cache onto itself through the full RoPE strip-and-reapply path changes the logits by at most \res{id.maxdiff} (fp16 rounding).
+At experiment Q's switch point it gives the same \res{id.tokens}-token greedy continuation as native decoding on \res{id.same} of \res{id.items} needle items.
 
 \subsection{Mid-decode transplant}\label{sec:transplant}
 The decode loop keeps one invariant: the cache holds KV for exactly the tokens fed so far, and \texttt{pending} is the token already shown to the user but not yet fed.
@@ -49,6 +51,7 @@ The \emph{ordered} schedule therefore runs as follows:
 \item load the receiver;
 \item apply the anchors and resume.
 \end{enumerate}
+Whether steps (2) and (4) are needed at all turns out to depend on MLX's cache limit (\cref{sec:results-memory}).
 \Cref{tab:schedules} lists the three alternatives we measure against it.
 \emph{colocated} is the prefill hand-off shape.
 \emph{del-only} is the natural ``drop it, then load''.

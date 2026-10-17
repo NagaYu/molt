@@ -46,38 +46,40 @@ Two interpretations differ from or extend the paper, and are documented in
 - λ is applied to the centred covariance.
 - k is chosen by held-out prefix-KV NLL, not downstream accuracy.
 
+## Read this first
+
+In molt's own benchmark (1.5B → 0.5B, switch mid-decode), the receiver
+decoding from a cache mapped with these weights keeps the topic and voice of
+the text but loses its specifics. Needle accuracy is {{q.15b-05b.C.needle}} with the map
+alone and {{q.15b-05b.D.needle}} with molt's native anchors, against
+{{q.15b-05b.A2.needle}} when the small model simply re-reads the transcript.
+Re-reading was also faster to resume at the context lengths tested. Use these
+mappers to study KV transfer. If you are switching models in an app, the data
+in [RESULTS.md](https://github.com/NagaYu/molt/blob/main/RESULTS.md) recommend
+releasing the big model first and then re-prefilling.
+
 ## Files
 
-| pair | file | k | params | role |
-|---|---|---:|---:|---|
-| 3B → 1.5B | `3b-1.5b/heo_k{{fit.3b-15b.kstar}}.safetensors` | {{fit.3b-15b.kstar}} | {{fit.3b-15b.kstar_mib}} MiB | condition C and molt |
-| 3B → 1.5B | `3b-1.5b/depth_linear.safetensors` | 1 | | ablation (molt v0.1 layer pairing) |
-| 1.5B → 0.5B | `1.5b-0.5b/heo_k{{fit.15b-05b.kstar}}.safetensors` | {{fit.15b-05b.kstar}} | {{fit.15b-05b.kstar_mib}} MiB | condition C and molt |
-| 1.5B → 0.5B | `1.5b-0.5b/depth_linear.safetensors` | 1 | | ablation |
+{{FILES_TABLE}}
 
 The safetensors header metadata carries the geometry, both RoPE specs, the
-per-layer source lists, λ and the number of calibration rows. `index.json`
+per-layer source lists, λ and the number of calibration rows. `mlx/index.json`
 lists SHA-256 checksums.
 
 ## Use (MLX)
 
 ```python
-from molt_mlx.mappers import KVMapper            # pip: see the molt repository
-m = KVMapper.load("1.5b-0.5b/heo_kK.safetensors")
+from molt_mlx.mappers import KVMapper            # from the molt repository (mlx/)
+m = KVMapper.load("mlx/1.5b-0.5b/heo_k16.safetensors")
 dst_pairs = m.apply(src_pairs, offset=0)          # src_pairs: [(K post-RoPE, V)] per source layer
 ```
 
-## Measured quality: held-out FineWeb-Edu, receiver decoding from a transferred 768-token prefix
+## Measured transfer quality: held-out FineWeb-Edu, receiver decoding from a transferred 768-token prefix
 
-| pair | mapped (k*) NLL | receiver reading natively | gap | held-out R² K / V |
-|---|---:|---:|---:|---:|
-| 3B → 1.5B | {{fit.3b-15b.kstar_nll}} | {{fit.3b-15b.native_dst_nll}} | {{fit.3b-15b.gap_nll}} | {{fit.3b-15b.kstar_r2k}} / {{fit.3b-15b.kstar_r2v}} |
-| 1.5B → 0.5B | {{fit.15b-05b.kstar_nll}} | {{fit.15b-05b.native_dst_nll}} | {{fit.15b-05b.gap_nll}} | {{fit.15b-05b.kstar_r2k}} / {{fit.15b-05b.kstar_r2v}} |
+{{QUALITY_TABLE}}
 
 A positive gap means the transferred cache is worse than letting the small
-model re-read the text. Results across all conditions, including where these
-mappers lose to re-prefill, are in
-[RESULTS.md](https://github.com/NagaYu/molt/blob/main/RESULTS.md).
+model re-read the text.
 
 ## Limits
 

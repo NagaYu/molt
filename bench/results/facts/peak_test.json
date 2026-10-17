@@ -1,52 +1,52 @@
 {
  "ordered": {
-  "peak_mib": 693.6734085083008,
-  "sampled_peak_mib": 693.6734085083008,
-  "cap_mib": 734.3140563964844,
+  "peak_mib": 693.9234313964844,
+  "sampled_peak_mib": 693.9234313964844,
+  "cap_mib": 731.1890563964844,
   "src_mib": 290.083984375,
   "dst_mib": 109.112548828125,
   "phases": {
-   "-": 346.43880462646484,
-   "load_src": 638.3296356201172,
-   "decode_src": 693.6734085083008,
-   "snapshot": 693.6734085083008,
-   "release_src": 693.6734085083008,
-   "load_mapper": 357.17322540283203,
-   "map": 376.3138732910156,
-   "load_dst": 467.3139419555664,
-   "transplant": 483.7358169555664,
-   "decode_dst": 484.2670669555664,
-   "done": 485.1420669555664
+   "-": 348.43882751464844,
+   "load_src": 640.5796356201172,
+   "decode_src": 693.9234313964844,
+   "snapshot": 693.9234313964844,
+   "release_src": 693.9234313964844,
+   "map": 415.3608627319336,
+   "load_dst": 470.0014419555664,
+   "transplant": 481.3139419555664,
+   "resumed": 481.3139419555664,
+   "decode_dst": 481.3139419555664,
+   "done": 482.11083984375
   },
-  "max_gap_ms": 27.596
+  "max_gap_ms": 6.977
  },
  "colocated": {
   "killed": true,
   "killed_in": "load_dst",
-  "cap_mib": 734.3140563964844,
+  "cap_mib": 731.1890563964844,
   "kill_reason": "sample"
  },
  "del_only": {
   "killed": true,
   "killed_in": "load_dst",
-  "cap_mib": 734.3140563964844,
+  "cap_mib": 731.1890563964844,
   "kill_reason": "sample"
  },
  "clear_no_wait": {
   "runs": [
    {
     "killed": false,
-    "peak_mib": 694
-   },
-   {
-    "killed": false,
-    "peak_mib": 695
+    "peak_mib": 692
    },
    {
     "killed": false,
     "peak_mib": 691
+   },
+   {
+    "killed": false,
+    "peak_mib": 692
    }
   ],
-  "cap_mib": 734.3140563964844
+  "cap_mib": 731.1890563964844
  }
 }
