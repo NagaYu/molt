@@ -1,1 +1,23 @@
-\pending{measurements for this subsection.}
+\paragraph{1.5B$\to$0.5B, mismatched KV geometry.}
+Heo et al.\ list this case as future work: head dimension 128$\to$64, 28$\to$24 layers.
+Calibration used \res{fit.15b-05b.n_rows} rows.
+On 64 held-out documents, prefix-KV NLL improves monotonically from $k=1$ (\res{fit.15b-05b.heok1.nll}) to $k=16$ (\res{fit.15b-05b.heok16.nll}).
+At $k=$ all \res{fit.15b-05b.nsrc} layers it is slightly worse (\res{fit.15b-05b.heokall.nll}), so $k^*=\res{fit.15b-05b.kstar}$ (\res{fit.15b-05b.kstar_mib}\,MiB in fp16).
+For reference, the receiver reading the same prefix itself scores \res{fit.15b-05b.native_dst_nll} and the sender \res{fit.15b-05b.native_src_nll}.
+The transferred cache therefore costs \res{fit.15b-05b.gap_nll} nats per token \emph{more} than letting the small model re-read the text.
+Held-out $R^2$ at $k^*$ is \res{fit.15b-05b.kstar_r2k} for keys and \res{fit.15b-05b.kstar_r2v} for values.
+Values are consistently the harder target.
+
+molt v0.1's own layer pairing (depth-linear, one source layer per target layer) has nearly the same $R^2$ as Heo's $k=1$.
+That is \res{fit.15b-05b.depth_r2k}/\res{fit.15b-05b.depth_r2v} for depth-linear against \res{fit.15b-05b.heok1.r2k}/\res{fit.15b-05b.heok1.r2v} for $k=1$.
+Its NLL, however, is far worse: \res{fit.15b-05b.depth_nll} against \res{fit.15b-05b.heok1.nll}.
+\emph{Which} layers feed a target matters more than the per-layer $R^2$ suggests, and the prior method's $R^2$ ranking gets it right where v0.1 did not.
+
+\paragraph{$\lambda$ and anchors (on a 32-document subset of the held-out split, so absolute values differ from the 64-document sweep).}
+NLL is flat from $\lambda=0$ (\res{fit.15b-05b.lam.0.0}) through $\lambda=0.01$ (\res{fit.15b-05b.lam.0.01}).
+It degrades at $0.1$ (\res{fit.15b-05b.lam.0.1}) and collapses at $1$ (\res{fit.15b-05b.lam.1.0}) (\cref{tab:lambda}).
+This is the shape Heo et al.\ describe for their own sweep, which supports reading $X^\top X$ as a covariance.
+Native anchors help, but only a little.
+With no anchors the NLL is \res{fit.15b-05b.anc.0_0}; the best setting within the 32-token tail budget is \res{fit.15b-05b.anchor} at \res{fit.15b-05b.anchor_nll}.
+A 128-token tail reaches \res{fit.15b-05b.anc.4_128}, and re-reading everything reaches \res{fit.15b-05b.anc.0_all}.
+On this intrinsic measure no partial-native setting closes the gap to re-prefill.

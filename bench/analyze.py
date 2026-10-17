@@ -137,6 +137,7 @@ def memory_summary(pair):
             energy_mig_cpu_j=ci([e.get("cpu_j") for e in en]),
             energy_mig_gpu_j=ci([e.get("gpu_j") for e in en]),
             gpu_baseline_w=ci([x.get("gpu_baseline_w") for x in w]),
+            resumed_mib=ci([r["phase_peaks_mib"].get("resumed") for r in ok if not r["killed"] or "resumed" in r["phase_peaks_mib"]]),
             phase_peaks=[r["phase_peaks_mib"] for r in rs][:1])
     return dict(plan=plan, cells=out)
 
@@ -146,6 +147,7 @@ def main():
     for pair in PAIRS:
         s["pairs"][pair] = dict(fit=fit_summary(pair), intrinsic=intrinsic_summary(pair),
                                 quality=quality_summary(pair), memory=memory_summary(pair))
+    s["resume_cost"] = {p: load_json(RESULTS / "resume_cost" / f"{p}.json") for p in PAIRS}
     s["facts"] = dict(platform=load_json(RESULTS / "facts" / "platform.json"),
                       peak_test=load_json(RESULTS / "facts" / "peak_test.json"))
     dev = RESULTS / "device"

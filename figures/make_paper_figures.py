@@ -132,6 +132,19 @@ for ax, pair in zip(axes[0], pairs or ["-"]):
     M[f"fit.{pl}.n_rows"] = f"{f['n_rows']:,}".replace(",", "{,}")
     M[f"fit.{pl}.anchor"] = f"$s={f['molt_anchor']['sink']}$, $t={f['molt_anchor']['tail']}$"
     put(f"fit.{pl}.anchor_nll", f["molt_anchor"]["nll"][0], 3)
+    for key, r in f["anchors"].items():
+        put(f"fit.{pl}.anc.{key.replace('/', '_')}", r["nll"][0], 3)
+    for lam, c in f["lam_sweep"].items():
+        put(f"fit.{pl}.lam.{lam}", c[0], 3)
+    put(f"fit.{pl}.depth_nll", f["rows"]["depth_linear"]["heldout_nll"][0], 3)
+    put(f"fit.{pl}.depth_r2k", f["rows"]["depth_linear"]["heldout_r2_k"], 3)
+    put(f"fit.{pl}.depth_r2v", f["rows"]["depth_linear"]["heldout_r2_v"], 3)
+    for n, r in f["rows"].items():
+        if n.startswith("heo_"):
+            put(f"fit.{pl}.{n.replace('_', '')}.nll", r["heldout_nll"][0], 3)
+            put(f"fit.{pl}.{n.replace('_', '')}.r2k", r["heldout_r2_k"], 3)
+            put(f"fit.{pl}.{n.replace('_', '')}.r2v", r["heldout_r2_v"], 3)
+    M[f"fit.{pl}.nsrc"] = str(len(f["single_source_r2"][0]))
     for n, r in sorted(f["rows"].items(), key=lambda kv: (kv[1]["policy"], kv[1]["k"])):
         tab_fit.append((PAIR_LABEL[pair], n.replace("_", r"\_"), r["k"], f"{r['params_m']:.1f}", f"{r['mib']:.0f}",
                         f"{r['insample_r2']:.3f}", f"{r['heldout_r2_k']:.3f}", f"{r['heldout_r2_v']:.3f}",

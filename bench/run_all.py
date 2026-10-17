@@ -59,6 +59,8 @@ def main():
             return
         step("bench.run_memory", "--pair", pair)
         refresh()
+        if not (RESULTS / "resume_cost" / f"{pair}.json").exists():
+            step("bench.resume_cost", "--pair", pair)
         if not (RESULTS / "intrinsic" / f"{pair}.json").exists():
             step("bench.intrinsic", "--pair", pair)
         refresh()

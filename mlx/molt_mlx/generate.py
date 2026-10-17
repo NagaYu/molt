@@ -25,14 +25,27 @@ from . import kvcache
 PREFILL_CHUNK = 512
 
 
+def head(model, hidden: mx.array) -> mx.array:
+    """The model's output projection, exactly as its ``__call__`` applies it."""
+    if getattr(model.args, "tie_word_embeddings", False):
+        return model.model.embed_tokens.as_linear(hidden)
+    return model.lm_head(hidden)
+
+
 def prefill(model, ids: List[int], cache=None, chunk: int = PREFILL_CHUNK):
-    """Feed ``ids`` in chunks (bounded activation memory); return last logits."""
+    """Feed ``ids`` in chunks; return the **last position's** logits only.
+
+    Projecting every position to the vocabulary would hold ``chunk × 151 936``
+    logits per chunk (≈155 MB in fp16 for 512 tokens) for nothing — a memory
+    cost that would unfairly penalise every condition that re-reads text
+    (restart, re-prefill), so it is not paid here."""
     cache = make_prompt_cache(model) if cache is None else cache
-    logits = None
+    h = None
     for i in range(0, len(ids), chunk):
-        logits = model(mx.array([ids[i:i + chunk]]), cache=cache)
-        mx.eval(logits, [c.state for c in cache])
-    return logits[:, -1], cache
+        h = model.model(mx.array([ids[i:i + chunk]]), cache=cache)
+        h = h[:, -1:, :]
+        mx.eval(h, [c.state for c in cache])
+    return head(model, h)[:, -1], cache
 
 
 @dataclass
@@ -88,6 +101,10 @@ def selftest() -> None:
     ref, _ = prefill(m, s.tokens, chunk=3)
     nxt = int(mx.argmax(ref, axis=-1).item())
     assert nxt == s.pending, (nxt, s.pending)
+    # last-position-only head == full forward's last row
+    full = m(mx.array([s.tokens]))[:, -1]
+    err = mx.abs(full - ref).max().item()
+    assert err < 1e-3, err
     print(f"  cache covers {len(s.tokens)} fed tokens; pending={s.pending} matches a "
           f"3-token-chunk re-prefill")
     print("generate: ok")
