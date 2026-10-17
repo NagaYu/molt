@@ -1,1 +1,41 @@
-\pending{written once all measurements are in.}
+\noindent\textbf{Where the hypothesis fails, stated plainly.}
+The design hypothesis had two parts.
+First, carrying the KV cache across the switch would let the small model continue \emph{the same sentence} better than discarding or re-reading the context.
+Second, molt's additions would make the simple method of~\citep{heo2026crossmodel} sufficient where it alone is not.
+For 1.5B$\to$0.5B, it does not.
+The 3B$\to$1.5B pair is \pending{still running}.
+
+\paragraph{The transferred cache does not carry the content.}
+With a mapped cache (C or D), the receiver keeps the topic and the voice of the text but loses its specifics.
+Needle accuracy is \res{q.15b-05b.C.needle} for C and \res{q.15b-05b.D.needle} for D, against \res{q.15b-05b.A2.needle} when the small model re-reads the text.
+On GSM8K the scores are \res{q.15b-05b.C.gsm8k} and \res{q.15b-05b.D.gsm8k}, against \res{q.15b-05b.A2.gsm8k}.
+molt's anchors make the seam smaller than C's.
+Paired agreement is $+$\res{qp.15b-05b.D.C.agree_post}, CI \res{qp.15b-05b.D.C.agree_post.ci}, and the seam is \res{qp.15b-05b.D.C.jump}~nats, CI \res{qp.15b-05b.D.C.jump.ci}.
+Task score does not move: \res{qp.15b-05b.D.C.task}, CI \res{qp.15b-05b.D.C.task.ci}.
+``Better than C'' and ``good enough'' are different claims, and only the first one holds here.
+The teacher-forced gap of about a tenth of a nat per token (\cref{sec:results-intrinsic}) understates this badly: it compounds once the receiver generates freely.
+
+\paragraph{Re-prefill is the better switch in exactly the setting we claim.}
+A$'$ meets all three conditions of our scope.
+It switches mid-decode with no retracted tokens, it is triggered by headroom, and it releases the sender before loading the receiver.
+It survives every cell in which C is killed.
+In our runs it resumes faster than D (\res{m.15b-05b.h345.A2.resume}\,s against \res{m.15b-05b.h345.D.resume}\,s at $h=345$) and uses less CPU energy (\res{m.15b-05b.h345.A2.ecpu}\,J against \res{m.15b-05b.h345.D.ecpu}\,J).
+The mapping is cheaper only in compute and only with longer context: \res{r.15b-05b.D.P4096}\,s against \res{r.15b-05b.A2.P4096}\,s at 4\,096 tokens.
+Our quality runs switched at \res{q.15b-05b.ctx.open}--\res{q.15b-05b.ctx.needle} tokens of context (medians per task), and the intrinsic gap grows with context (\res{int.15b-05b.D.P768} at 768 tokens).
+So a long-context advantage for the transferred cache is \emph{untested}, and on the trend we measured, unlikely.
+
+\paragraph{The careful release is a fix for one allocator setting, not a general requirement.}
+Under MLX's default buffer cache, drop-then-load is killed in every cell, and the plain \texttt{clear\_cache()} variant survives erratically.
+There, synchronise-clear-wait is what makes the ordered schedule survive.
+Under the 20\,MiB cache limit that mlx-swift's examples set on iOS, both naive variants survive every cell we ran.
+What holds under both settings is only the \emph{order}: the receiver must not be loaded before the sender is released.
+That is a necessary condition, not a technique.
+
+\paragraph{Nothing of molt v0.1's mapper survives.}
+Its depth-linear layer pairing is far worse than the prior method's $R^2$-ranked top-$k$.
+Held-out NLL is \res{fit.15b-05b.depth_nll} against \res{fit.15b-05b.kstar_nll}; needle accuracy is \res{q.15b-05b.Ddepth.needle}.
+
+\paragraph{What does hold.}
+Below the headroom a co-resident switch needs (\res{m.15b-05b.need}\,MiB here), the prefill-hand-off shape is killed.
+A release-first switch completes with no retracted token, under both allocator settings.
+At the context lengths we measured, the best thing to give the receiver in that situation is the transcript, not the transferred KV.

@@ -1,1 +1,29 @@
-\pending{measurements for this subsection.}
+\paragraph{1.5B$\to$0.5B.}
+The big model decodes at $S=\res{m.15b-05b.S}$\,MiB and the small one at \res{m.15b-05b.Ssmall}\,MiB.
+A co-resident switch needs $\approx$\res{m.15b-05b.need}\,MiB of headroom: \res{m.15b-05b.dstw}\,MiB of receiver weights, the \res{m.15b-05b.mapw}\,MiB mapper and a margin.
+We swept $h\in\{\res{m.15b-05b.hgrid}\}$\,MiB, with 3 runs per cell (\cref{fig:survival,tab:memory}).
+Doing nothing (\emph{big, ignores pressure}) is killed in every cell, so the emulator does reproduce the kill.
+The hand-off shape is killed in \texttt{load\_dst} or \texttt{transplant} whenever $h$ is below its need: C is \res{m.15b-05b.h128.C.surv} at $h=128$ and \res{m.15b-05b.h345.C.surv} at $h=345$.
+It survives above the need: \res{m.15b-05b.h569.C.surv} at $h=569$.
+Every schedule that releases the sender first survives every cell: A, A$'$, D and C$+$ordered.
+At $h=345$ the kernel lifetime-maximum footprints are \res{m.15b-05b.h345.D.peak}\,MiB for D and \res{m.15b-05b.h345.A2.peak}\,MiB for A$'$, under a cap of \res{m.15b-05b.h345.cap}\,MiB.
+\Cref{fig:timeline} shows the footprint through the switch.
+
+\emph{The naive freeing variants depend on the allocator.}
+Under MLX's default buffer cache, D with del-only is killed in every cell, including $h=818$ (\res{m.15b-05b.h818.Ddelonly.surv}).
+D with clear-no-wait is erratic: \res{m.15b-05b.h128.Dclearnowait.surv}, \res{m.15b-05b.h205.Dclearnowait.surv}, \res{m.15b-05b.h345.Dclearnowait.surv}, \res{m.15b-05b.h569.Dclearnowait.surv} and \res{m.15b-05b.h818.Dclearnowait.surv} across the grid.
+This matches \cref{app:mlx}: \texttt{clear\_cache} only sometimes frees.
+With the 20\,MiB cache limit that mlx-swift's examples set on iOS, both variants survive every cell tested.
+For example, at $h=345$ del-only is \res{m.c20.15b-05b.h345.Ddelonly.surv} and clear-no-wait \res{m.c20.15b-05b.h345.Dclearnowait.surv}.
+C is still \res{m.c20.15b-05b.h345.C.surv}.
+
+\emph{Time to resume and energy at $h=345$.}
+A$'$ resumes in \res{m.15b-05b.h345.A2.resume}\,s, D in \res{m.15b-05b.h345.D.resume}\,s and C$+$ordered in \res{m.15b-05b.h345.Cordered.resume}\,s.
+Releasing the sender costs about \res{m.15b-05b.h345.D.ph.releasesrc}\,s in every condition.
+That time goes to garbage collection, synchronisation and unmapping; the wait for the footprint is $\approx$0.
+D additionally pays \res{m.15b-05b.h345.D.ph.map}\,s in its \texttt{map} phase, most of it the second release (mapper and sender KV).
+CPU energy for the switch is \res{m.15b-05b.h345.A2.ecpu}\,J for A$'$ and \res{m.15b-05b.h345.D.ecpu}\,J for D.
+GPU energy could not be attributed: other processes drew \res{m.15b-05b.h345.D.gpubase}\,W of GPU power in the same runs.
+With models resident, mapping is cheaper than re-prefill from 256 tokens of context up (\cref{fig:resumecost}).
+At 1\,024 tokens it takes \res{r.15b-05b.D.P1024}\,s against \res{r.15b-05b.A2.P1024}\,s, and at 4\,096 tokens \res{r.15b-05b.D.P4096}\,s against \res{r.15b-05b.A2.P4096}\,s.
+In our runs the context at the switch is short: median \res{q.15b-05b.ctx.open} tokens for open prompts, \res{q.15b-05b.ctx.gsm8k} for GSM8K and \res{q.15b-05b.ctx.needle} for the needle task. There, the mapping's compute saving is smaller than the extra release it requires.

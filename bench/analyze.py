@@ -64,11 +64,17 @@ def intrinsic_summary(pair):
                 summary=d["summary"])
 
 
+def _max_new():
+    pj = RESULTS.parent / "prompts.json"
+    return {p["id"]: p["max_new"] for p in json.loads(pj.read_text())} if pj.exists() else {}
+
+
 def quality_summary(pair):
     p = RESULTS / "scored" / "quality" / f"{pair}.jsonl"
     if not p.exists():
         return None
     rows = [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+    mx_new = _max_new()
     by = defaultdict(list)
     for r in rows:
         by[r["cond"]].append(r)
@@ -78,8 +84,11 @@ def quality_summary(pair):
         for kind in ("gsm8k", "needle"):
             v = [r["task_correct"] for r in rs if r["kind"] == kind]
             acc[kind] = ci(v)
+        trunc = {kind: ci([float(r.get("n_gen") == mx_new.get(r["id"])) for r in rs
+                           if r["kind"] == kind and r.get("n_gen") is not None])
+                 for kind in ("gsm8k", "open")} if mx_new else {}
         out[cond] = dict(
-            n=len(rs), acc=acc,
+            n=len(rs), acc=acc, truncated=trunc,
             agree_post=ci([r.get("agree_post") for r in rs]),
             agree_post_open=ci([r.get("agree_post") for r in rs if r["kind"] == "open"]),
             nll_post=ci([r.get("nll_post") for r in rs]),
@@ -101,11 +110,28 @@ def quality_summary(pair):
                 agree_post=paired(per_item(a, "agree_post"), per_item(b, "agree_post")),
                 task=paired({k: v for k, v in per_item(a, "task_correct").items()},
                             per_item(b, "task_correct")))
-    return dict(conds=out, paired=comps, n_items=len({r["id"] for r in rows}))
+    # context length at the switch (prompt incl. chat template + tokens already emitted)
+    ctx = defaultdict(list)
+    for f in (RESULTS / "raw" / "quality" / pair).glob("*/shard_*.json"):
+        for r in json.loads(f.read_text())["runs"]:
+            if r.get("boundary") is not None:
+                ctx[r["kind"]].append(r["prompt_len"] + r["boundary"])
+    context = {k: dict(median=median(v), min=min(v), max=max(v)) for k, v in ctx.items()}
+    return dict(conds=out, paired=comps, n_items=len({r["id"] for r in rows}), context=context)
 
 
-def memory_summary(pair):
-    root = RESULTS / "raw" / "memory" / pair
+def _phase_durations(migs):
+    out = defaultdict(list)
+    for m in migs:
+        ph = m.get("phases") or []
+        ts = [p["t"] for p in ph] + [m.get("seconds", 0)]
+        for i, p in enumerate(ph):
+            out[p["name"]].append(ts[i + 1] - ts[i])
+    return out
+
+
+def memory_summary(pair, sub=None):
+    root = RESULTS / "raw" / "memory" / (sub or pair)
     plan = load_json(root / "plan.json")
     if not plan:
         return None
@@ -137,6 +163,7 @@ def memory_summary(pair):
             energy_mig_cpu_j=ci([e.get("cpu_j") for e in en]),
             energy_mig_gpu_j=ci([e.get("gpu_j") for e in en]),
             gpu_baseline_w=ci([x.get("gpu_baseline_w") for x in w]),
+            phase_s={name: median(vals) for name, vals in _phase_durations(mig).items()},
             resumed_mib=ci([r["phase_peaks_mib"].get("resumed") for r in ok if not r["killed"] or "resumed" in r["phase_peaks_mib"]]),
             phase_peaks=[r["phase_peaks_mib"] for r in rs][:1])
     return dict(plan=plan, cells=out)
@@ -146,7 +173,8 @@ def main():
     s = dict(pairs={})
     for pair in PAIRS:
         s["pairs"][pair] = dict(fit=fit_summary(pair), intrinsic=intrinsic_summary(pair),
-                                quality=quality_summary(pair), memory=memory_summary(pair))
+                                quality=quality_summary(pair), memory=memory_summary(pair),
+                                memory_cache20=memory_summary(pair, f"{pair}_cache20"))
     s["resume_cost"] = {p: load_json(RESULTS / "resume_cost" / f"{p}.json") for p in PAIRS}
     s["facts"] = dict(platform=load_json(RESULTS / "facts" / "platform.json"),
                       peak_test=load_json(RESULTS / "facts" / "peak_test.json"))

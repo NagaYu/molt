@@ -37,6 +37,9 @@ PROBE_ID = "open-00"
 PROMPT_IDS = ("open-01", "open-02", "open-03")
 
 
+CACHE_LIMIT = None   # set from --cache-limit-mib
+
+
 def run(pair, cond, pid, cap, ballast, out_dir: Path, tag: str):
     out = out_dir / f"{cond}__{pid}__{tag}.json"
     if out.exists():
@@ -45,7 +48,8 @@ def run(pair, cond, pid, cap, ballast, out_dir: Path, tag: str):
     csv = str(out.with_suffix(".csv"))
     cmd = [sys.executable, "-m", "bench.worker", "--pair", pair, "--cond", cond, "--ids", pid,
            "--out", str(out.with_suffix(".worker.json")), "--cap-mib", str(cap),
-           "--ballast-mib", str(ballast), "--chunk-mib", str(CHUNK_MIB)]
+           "--ballast-mib", str(ballast), "--chunk-mib", str(CHUNK_MIB)] + \
+          (["--cache-limit-mib", str(CACHE_LIMIT)] if CACHE_LIMIT is not None else [])
     t0 = time.time()
     rc, res = watchdog.run_under_watchdog(cmd, cap_mib=cap, csv_path=csv, timeout_s=900)
     wj = out.with_suffix(".worker.json")
@@ -70,8 +74,13 @@ def main():
     ap.add_argument("--conds", default=",".join(MEM_CONDS))
     ap.add_argument("--repeats", type=int, default=1)
     ap.add_argument("--h", default=None, help="comma-separated headroom values (MiB)")
+    ap.add_argument("--cache-limit-mib", type=float, default=None)
+    ap.add_argument("--prompts", default=",".join(PROMPT_IDS))
     a = ap.parse_args()
-    root = RESULTS / "raw" / "memory" / a.pair
+    global CACHE_LIMIT
+    CACHE_LIMIT = a.cache_limit_mib
+    sub = a.pair if a.cache_limit_mib is None else f"{a.pair}_cache{int(a.cache_limit_mib)}"
+    root = RESULTS / "raw" / "memory" / sub
     # 1) probe S and S_small: uncapped, no ballast, watchdog in monitor-only mode
     big = run(a.pair, "static_big", PROBE_ID, 0, 0, root / "probe", "probe")
     small = run(a.pair, "B", PROBE_ID, 0, 0, root / "probe", "probe")
@@ -95,7 +104,7 @@ def main():
         cap = round(S + h)
         ballast = max(CHUNK_MIB, round(h + (S - S_small) - END_MARGIN_MIB))
         for rep in range(a.repeats):
-            for pid in PROMPT_IDS:
+            for pid in a.prompts.split(","):
                 for cond in a.conds.split(","):
                     r = run(a.pair, cond, pid, cap, ballast, root / f"h{int(h)}", f"r{rep}")
                     print(f"[{time.time() - t0:6.0f}s] h={h:.0f} cap={cap} {cond:16s} {pid} "

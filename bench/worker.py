@@ -193,9 +193,15 @@ def main():
     ap.add_argument("--margin-mib", type=float, default=96.0)
     ap.add_argument("--pressure-at", type=int, default=None, help="override per-item value")
     ap.add_argument("--max-new", type=int, default=None, help="override per-item value")
+    ap.add_argument("--cache-limit-mib", type=float, default=None,
+                    help="mx.set_cache_limit; default = MLX's own default (no limit set). "
+                         "20 is what mlx-swift-examples sets on iOS.")
     args = ap.parse_args()
 
     wait_until_watched()
+    if args.cache_limit_mib is not None:
+        import mlx.core as mx
+        mx.set_cache_limit(int(args.cache_limit_mib * MiB))
     from molt_mlx.footprint import PhaseMarker
     from molt_mlx import tiers
     mark = PhaseMarker(os.environ.get("MOLT_WATCHDOG_CSV"))
@@ -218,7 +224,7 @@ def main():
         log(dict(ev="start", id=pid))
         recs.append(run_prompt(it, cond, args.pair, tok, args, mark, log))
         log(dict(ev="end", id=pid))
-    out.write_text(json.dumps(dict(machine=env, runs=recs)))
+    out.write_text(json.dumps(dict(machine=env, cache_limit_mib=args.cache_limit_mib, runs=recs)))
 
 
 if __name__ == "__main__":

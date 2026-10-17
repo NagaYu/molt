@@ -45,7 +45,22 @@ faithful reproduction of the method above (condition **C**). It is answered in
 or "re-prefill is better".
 
 <!-- results:begin -->
-*See [RESULTS.md](RESULTS.md).*
+**At a glance (Qwen2.5-1.5B → 0.5B, 4-bit, M2, jetsam emulation; [all numbers](RESULTS.md)):**
+
+- **Load before release** is the prefill hand-off shape (condition C, Heo et al.'s
+  mapper). It is killed whenever spare memory is below the 409 MiB it
+  needs (h = 345 MiB: 0/3 survived). **Release first** survives
+  every cell (3/3).
+- **But the transferred KV does not carry the prompt's content.** Needle
+  accuracy is 0.125 with molt's anchors and 0.208
+  without, against **0.958** when the small model simply re-reads
+  the transcript. Re-reading also resumed faster (0.48 s vs
+  0.79 s).
+- So the recommendation from our own data: **switch release-first, then
+  re-prefill**. KV transfer is cheaper only in raw compute, and only once the
+  context is long enough to pay for its extra release. Our switches, at
+  89–298 tokens, were never that long, and
+  its quality gap grows with context.
 <!-- results:end -->
 
 ## What freeing a model actually takes on MLX (measured)

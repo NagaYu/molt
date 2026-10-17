@@ -1,0 +1,5 @@
+{"ev": "start", "id": "needle-00"}
+{"ev": "token", "i": 0, "t": 1.1285319999878993}
+{"ev": "trigger", "t": 1.2918899159994908, "n_emitted": 6, "headroom_mib": 0.0, "footprint_mib": 1654.3928909301758, "ballast_held_mib": 0.0, "shown": [785, 2615, 2038, 369, 279, 730]}
+{"ev": "token", "i": 6, "t": 1.9956152079976164}
+{"ev": "end", "id": "needle-00"}

@@ -1,1 +1,7 @@
-\pending{measurements for this subsection.}
+\paragraph{1.5B$\to$0.5B.}
+Teacher-forced, the transferred cache is never as good as letting the receiver read the text itself, and the gap grows with context (\cref{fig:intrinsic}).
+For C the gap is \res{int.15b-05b.C.P32}~nats per token at $P=32$ and \res{int.15b-05b.C.P768} at $P=768$, CI \res{int.15b-05b.C.P768.ci}.
+molt's anchors narrow it to \res{int.15b-05b.D.P768} at $P=768$.
+At $P=32$ the 32-token native tail covers the whole context, so D \emph{is} a re-prefill there (\res{int.15b-05b.D.P32}).
+Per token these gaps look small: about a tenth of a nat, against the \res{fit.15b-05b.native_src_nll}$\to$\res{fit.15b-05b.native_dst_nll} difference between the two models.
+\Cref{sec:results-quality} shows they are not small once the receiver generates freely.

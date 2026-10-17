@@ -12,6 +12,8 @@ and the two models are \emph{never resident together}.
 We implement this setting in MLX on Apple silicon and test it against an external jetsam emulator.
 We compare it with restart, always-small, re-prefill, and the closed-form ridge map of~\citep{heo2026crossmodel} applied mid-decode.
 That last baseline is reproduced to the letter and runs in the hand-off shape, with both models loaded.
-Results are \res{abs.summary}.
+For 1.5B$\to$0.5B Qwen2.5 when the app has less spare memory than the \res{m.15b-05b.need}\,MiB a co-resident switch needs, the hand-off shape is killed while every release-first switch survives.
+But the mapped cache loses the prompt's specifics: needle accuracy is \res{q.15b-05b.D.needle} with our additions and \res{q.15b-05b.C.needle} without, against \res{q.15b-05b.A2.needle} for simply re-reading the transcript, which also resumed faster.
+We state plainly that, in the setting we claim, KV transfer is not the right way to switch.
 iPhone measurements, energy on device, and human ratings are \pending{not yet collected}.
 \end{abstract}

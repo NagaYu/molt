@@ -38,6 +38,11 @@ COND_LABEL = {"big": "big (no pressure)", "static_big": "big, ignores pressure",
               "D": "D molt", "C_ordered": "C + ordered", "D_colocated": "D, colocated",
               "D_del_only": "D, del-only", "D_clear_no_wait": "D, clear-no-wait",
               "D_depth": "D, depth-linear"}
+def tex(label: str) -> str:
+    """Figure labels use Unicode; LaTeX tables need math-mode arrows and primes."""
+    return label.replace("→", r"$\to$").replace("A′", "A$'$").replace("_", r"\_")
+
+
 COLORS = {"static_big": "#888888", "A": "#d62728", "A2": "#9467bd", "B": "#8c564b",
           "C": "#ff7f0e", "D": "#1f77b4", "C_ordered": "#e6ab02", "D_colocated": "#17becf",
           "D_del_only": "#bcbd22", "D_clear_no_wait": "#7f7f7f", "D_depth": "#2ca02c",
@@ -146,11 +151,11 @@ for ax, pair in zip(axes[0], pairs or ["-"]):
             put(f"fit.{pl}.{n.replace('_', '')}.r2v", r["heldout_r2_v"], 3)
     M[f"fit.{pl}.nsrc"] = str(len(f["single_source_r2"][0]))
     for n, r in sorted(f["rows"].items(), key=lambda kv: (kv[1]["policy"], kv[1]["k"])):
-        tab_fit.append((PAIR_LABEL[pair], n.replace("_", r"\_"), r["k"], f"{r['params_m']:.1f}", f"{r['mib']:.0f}",
+        tab_fit.append((tex(PAIR_LABEL[pair]), n.replace("_", r"\_"), r["k"], f"{r['params_m']:.1f}", f"{r['mib']:.0f}",
                         f"{r['insample_r2']:.3f}", f"{r['heldout_r2_k']:.3f}", f"{r['heldout_r2_v']:.3f}",
                         f"{r['heldout_nll'][0]:.3f}"))
     for lam, c in f["lam_sweep"].items():
-        tab_lam.append((PAIR_LABEL[pair], lam, f"{c[0]:.3f} [{c[1]:.3f}, {c[2]:.3f}]"))
+        tab_lam.append((tex(PAIR_LABEL[pair]), lam, f"{c[0]:.3f} [{c[1]:.3f}, {c[2]:.3f}]"))
 save(fig, "fit_ksweep")
 
 # ------------------------------------------------------------------ intrinsic
@@ -215,9 +220,12 @@ for row, pair in enumerate(pairs or ["-"]):
         put_ci(f"q.{pl}.{key}.lost", cq["lost_tokens"], 1)
         put_ci(f"q.{pl}.{key}.resume", cq["time_to_resume_s"], 2)
         put_ci(f"q.{pl}.{key}.newcontent", cq["time_to_new_content_s"], 2)
+        for kind, t in (cq.get("truncated") or {}).items():
+            if t:
+                M[f"q.{pl}.{key}.trunc.{kind}"] = f"{round(t['mean'] * t['n'])}/{t['n']}"
         g = cq["acc"]["gsm8k"]; nd = cq["acc"]["needle"]; ag = cq["agree_post"]; jp = cq["jump"]
         rs = cq["time_to_new_content_s"]
-        tab_q.append((PAIR_LABEL[pair], COND_LABEL[c],
+        tab_q.append((tex(PAIR_LABEL[pair]), tex(COND_LABEL[c]),
                       f"{g['mean']:.2f}" if g else "--", f"{nd['mean']:.2f}" if nd else "--",
                       f"{ag['mean']:.3f}" if ag else "--", f"{jp['mean']:+.3f}" if jp else "--",
                       f"{cq['lost_tokens']['mean']:.0f}" if cq["lost_tokens"] else "--",
@@ -228,30 +236,41 @@ for row, pair in enumerate(pairs or ["-"]):
             if v.get(metric):
                 put_ci(f"qp.{pl}.{a.replace('_', '')}.{b}.{metric}", v[metric], 3)
     M[f"q.{pl}.n_items"] = str(q["n_items"])
+    for kind, c in (q.get("context") or {}).items():
+        M[f"q.{pl}.ctx.{kind}"] = f"{c['median']:.0f}"
+        M[f"q.{pl}.ctx.{kind}.range"] = f"{c['min']:.0f}--{c['max']:.0f}"
 save(fig, "quality")
 
 # ------------------------------------------------------------------ memory
 MC = ["static_big", "A", "A2", "B", "C", "D", "C_ordered", "D_colocated", "D_del_only", "D_clear_no_wait"]
 tab_m = []
-fig, axes = plt.subplots(1, max(1, len(pairs)), figsize=(5.6 * max(1, len(pairs)), 3.6), squeeze=False)
+fig, axes = plt.subplots(1, max(1, len(pairs)), figsize=(5.8 * max(1, len(pairs)), 4.0), squeeze=False)
 for ax, pair in zip(axes[0], pairs or ["-"]):
     mm = S["pairs"].get(pair, {}).get("memory")
     if not mm or not mm["cells"]:
         ax.set_axis_off(); continue
     pl = pair.replace(".", "")
     hs = sorted(int(h) for h in mm["cells"])
-    for j, c in enumerate(MC):
-        ys = [mm["cells"][str(h)].get(c, {}).get("survival", {}) for h in hs]
-        if not any(ys):
-            continue
-        ax.plot(hs, [y["mean"] if y else float("nan") for y in ys], "o-", color=COLORS[c],
-                label=COND_LABEL[c], lw=2.2 if c in ("C", "D") else 1, alpha=0.9,
-                ms=4 + (j % 3), markerfacecolor="none" if j % 2 else COLORS[c])
-    ax.axvline(mm["plan"]["need_colocated"], color=COLORS["C"], ls=":", lw=1)
-    ax.text(mm["plan"]["need_colocated"], 0.5, " co-resident need", fontsize=7, color=COLORS["C"])
-    ax.set_xlabel("headroom h over the big model's footprint (MiB)"); ax.set_ylabel("survival rate")
-    ax.set_ylim(-0.05, 1.05); ax.set_title(f"{PAIR_LABEL[pair]}: survival under a per-process cap")
-    ax.legend(fontsize=6, ncol=2)
+    rows = [c for c in MC if any(c in mm["cells"][str(h)] for h in hs)]
+    grid = [[(mm["cells"][str(h)].get(c) or {}).get("survival", {}) or {} for h in hs] for c in rows]
+    vals = [[g.get("mean", float("nan")) for g in r] for r in grid]
+    ax.imshow(vals, cmap="RdYlGn", vmin=0, vmax=1, aspect="auto")
+    for i, c in enumerate(rows):
+        for j, h in enumerate(hs):
+            cell = mm["cells"][str(h)].get(c)
+            if cell:
+                v = vals[i][j]
+                ax.text(j, i, f"{cell['survived']}/{cell['n']}", ha="center", va="center", fontsize=8,
+                        color="white" if (v < 0.25 or v > 0.75) else "black")
+    ax.set_xticks(range(len(hs))); ax.set_xticklabels([str(h) for h in hs])
+    ax.set_yticks(range(len(rows))); ax.set_yticklabels([COND_LABEL[c] for c in rows], fontsize=8)
+    need = mm["plan"]["need_colocated"]
+    xpos = sum(1 for h in hs if h < need) - 0.5
+    ax.axvline(xpos, color="k", ls=":", lw=1)
+    ax.text(xpos + 0.05, len(rows) - 0.55, "← below: a co-resident switch cannot fit", fontsize=7,
+            va="top", color="k", bbox=dict(facecolor="white", alpha=0.8, lw=0, pad=1))
+    ax.set_xlabel("headroom h over the big model's footprint (MiB)")
+    ax.set_title(f"{PAIR_LABEL[pair]}: survived / runs under a per-process cap", fontsize=10)
     p = mm["plan"]
     put(f"m.{pl}.S", p["S"], 0); put(f"m.{pl}.Ssmall", p["S_small"], 0); put(f"m.{pl}.dstw", p["dst_w"], 0)
     put(f"m.{pl}.mapw", p["mapper_w"], 0); put(f"m.{pl}.need", p["need_colocated"], 0)
@@ -261,13 +280,14 @@ for ax, pair in zip(axes[0], pairs or ["-"]):
             key = c.replace("_", "")
             M[f"m.{pl}.h{h}.{key}.surv"] = f"{cell['survived']}/{cell['n']}"
             put(f"m.{pl}.h{h}.{key}.peak", cell["peak_mib"]["max"], 0)
+            put(f"m.{pl}.h{h}.cap", cell["cap_mib"], 0)
             if cell["killed_in"]:
                 M[f"m.{pl}.h{h}.{key}.killedin"] = ", ".join(x.replace("_", r"\_") for x in cell["killed_in"])
             put_ci(f"m.{pl}.h{h}.{key}.resume", cell["time_to_resume_s"], 2)
             put_ci(f"m.{pl}.h{h}.{key}.mig", cell["migration_s"], 2)
             put_ci(f"m.{pl}.h{h}.{key}.ecpu", cell["energy_mig_cpu_j"], 2)
             put_ci(f"m.{pl}.h{h}.{key}.egpu", cell["energy_mig_gpu_j"], 2)
-            tab_m.append((PAIR_LABEL[pair], h, cell["cap_mib"], COND_LABEL[c], f"{cell['survived']}/{cell['n']}",
+            tab_m.append((tex(PAIR_LABEL[pair]), h, f"{cell['cap_mib']:.0f}", tex(COND_LABEL[c]), f"{cell['survived']}/{cell['n']}",
                           f"{cell['peak_mib']['max']:.0f}",
                           ", ".join(cell["killed_in"]).replace("_", r"\_") or "--",
                           f"{cell['time_to_resume_s']['mean']:.2f}" if cell["time_to_resume_s"] else "--"))
@@ -285,23 +305,73 @@ for pair in pairs:
     h = max(band)
     fig, ax = plt.subplots(figsize=(7.5, 3.4))
     cap = None
+    SWITCH = ("snapshot", "release_src", "load_dst", "load_mapper")
     for c in ("C", "D", "D_del_only", "D_clear_no_wait", "A2"):
         files = sorted((RES / "raw" / "memory" / pair / f"h{h}").glob(f"{c}__*__r0.csv"))
         if not files:
             continue
-        rows = list(csv.reader(open(files[0])))
-        pts = [(int(r[0]) / 1e6, int(r[1]) / 2**20) for r in rows[1:] if r and not r[0].startswith("#")]
-        if not pts:
+        rows = [r for r in csv.reader(open(files[0])) if r and not r[0].startswith(("#", "t_us"))]
+        t0 = next((int(r[0]) for r in rows if r[2] in SWITCH), None)
+        if t0 is None:
             continue
-        ax.plot([t for t, _ in pts], [m for _, m in pts], color=COLORS[c], lw=1, label=COND_LABEL[c])
+        pts = [((int(r[0]) - t0) / 1e6, int(r[1]) / 2**20, r[2]) for r in rows
+               if -1.0 <= (int(r[0]) - t0) / 1e6 <= 3.0 and r[2] not in ("done",)]
+        ax.plot([t for t, _, _ in pts], [m for _, m, _ in pts], color=COLORS[c], lw=1.2, label=COND_LABEL[c])
+        kill = [(t, m) for t, m, ph in pts if ph == "KILLED"]
+        if kill:
+            ax.plot(*kill[0], "x", color=COLORS[c], ms=9, mew=2)
         cap = mm["cells"][str(h)][c]["cap_mib"]
     if cap:
         ax.axhline(cap, color="r", ls="--", lw=1, label="cap (jetsam emulation)")
-    ax.set_xlabel("time (s)"); ax.set_ylabel("phys_footprint (MiB)")
+    ax.axvline(0, color="k", lw=0.6)
+    ax.set_xlabel("time from the start of the switch (s);  × = killed by the watchdog")
+    ax.set_ylabel("phys_footprint (MiB)")
     ax.set_title(f"{PAIR_LABEL[pair]}: footprint through the switch, h = {h} MiB")
-    ax.legend(fontsize=7)
+    ax.legend(fontsize=7, loc="lower left")
     save(fig, f"footprint_timeline_{pair.replace('.', '')}")
     M[f"m.{pair.replace('.', '')}.bandh"] = str(h)
+
+# ------------------------------------------------------------------ resume cost
+rc_pairs = [p for p, d in (S.get("resume_cost") or {}).items() if d]
+if rc_pairs:
+    fig, axes = plt.subplots(1, len(rc_pairs), figsize=(5.2 * len(rc_pairs), 3.4), squeeze=False)
+    for ax, pair in zip(axes[0], rc_pairs):
+        d = S["resume_cost"][pair]
+        pl = pair.replace(".", "")
+        Ps = sorted(int(p) for p in d["by_context"])
+        for arm, col in (("A2 re-prefill", COLORS["A2"]), ("C ridge", COLORS["C"]), ("D molt anchors", COLORS["D"])):
+            ys = [d["by_context"][str(p)][arm]["median_s"] for p in Ps]
+            ax.plot(Ps, ys, "o-", color=col, label=arm)
+            key = {"A2 re-prefill": "A2", "C ridge": "C", "D molt anchors": "D"}[arm]
+            for p, y in zip(Ps, ys):
+                put(f"r.{pl}.{key}.P{p}", y, 3)
+        ax.set_xscale("log", base=2); ax.set_yscale("log")
+        ax.set_xlabel("context at the switch (tokens)"); ax.set_ylabel("resume compute (s, median)")
+        ax.set_title(f"{PAIR_LABEL[pair]}: resume compute, models resident")
+        ax.legend(fontsize=7)
+        put(f"r.{pl}.load_dst", d["load_s"]["dst_model"], 3)
+        put(f"r.{pl}.load_mapper", d["load_s"]["mapper"], 3)
+        M[f"r.{pl}.repeats"] = str(d["repeats"])
+    save(fig, "resume_cost")
+
+# phase durations (median over runs) at every h, for the conditions that switch
+for pair in pairs:
+    for sub, tag in (("memory", ""), ("memory_cache20", "c20.")):
+        mm = S["pairs"].get(pair, {}).get(sub)
+        if not mm or not mm["cells"]:
+            continue
+        pl = pair.replace(".", "")
+        for h, cells in mm["cells"].items():
+            for c, cell in cells.items():
+                key = c.replace("_", "")
+                for ph, v in (cell.get("phase_s") or {}).items():
+                    put(f"m.{tag}{pl}.h{h}.{key}.ph.{ph.replace('_', '')}", v, 3)
+                if cell.get("resumed_mib"):
+                    put(f"m.{tag}{pl}.h{h}.{key}.resumed", cell["resumed_mib"]["mean"], 0)
+                if tag:
+                    M[f"m.{tag}{pl}.h{h}.{key}.surv"] = f"{cell['survived']}/{cell['n']}"
+                    put(f"m.{tag}{pl}.h{h}.{key}.peak", cell["peak_mib"]["max"], 0)
+                put(f"m.{tag}{pl}.h{h}.{key}.gpubase", (cell.get("gpu_baseline_w") or {}).get("mean"), 1)
 
 # ------------------------------------------------------------------ write
 def tex_table(rows, header, caption, label, colspec):

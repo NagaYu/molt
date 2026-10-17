@@ -1,1 +1,13 @@
-\pending{measurements for this subsection.}
+\paragraph{1.5B$\to$0.5B: the transferred cache loses the prompt's specifics.}
+Every migrating condition switches at the same token (\cref{fig:quality,tab:quality}).
+\begin{itemize}
+\item \textbf{Needle} (the switch lands just before the value is written). Re-prefill A$'$ answers \res{q.15b-05b.A2.needle} of the items correctly, the same as the small model alone (B, \res{q.15b-05b.B.needle}). C answers \res{q.15b-05b.C.needle} and molt (D) \res{q.15b-05b.D.needle}. The failures are near-misses, such as ``8563'' for 8564, or plausible wrong codes: the receiver knows it must write a four-digit code, but not which one.
+\item \textbf{GSM8K} (the switch lands mid-reasoning). The big model alone scores \res{q.15b-05b.big.gsm8k}. A$'$ scores \res{q.15b-05b.A2.gsm8k}, \emph{above} B (\res{q.15b-05b.B.gsm8k}), because the big model's first 32 tokens set up a short, correct derivation that the small model continues. C scores \res{q.15b-05b.C.gsm8k} and D \res{q.15b-05b.D.gsm8k}. Their continuations stay fluent and on-topic but bring in quantities the problem never states. Every C and D run hits the 256-token cap without finishing (\res{q.15b-05b.C.trunc.gsm8k} and \res{q.15b-05b.D.trunc.gsm8k}, against \res{q.15b-05b.A2.trunc.gsm8k} for A$'$).
+\item \textbf{Judge agreement after the switch} (all 68 items). A$'$ \res{q.15b-05b.A2.agree}, C \res{q.15b-05b.C.agree}, D \res{q.15b-05b.D.agree}. The seam jump in judge NLL at the boundary is \res{q.15b-05b.A2.jump} for A$'$, \res{q.15b-05b.C.jump} for C and \res{q.15b-05b.D.jump} for D.
+\end{itemize}
+Paired by item:
+\begin{itemize}
+\item D improves on C. Agreement $+$\res{qp.15b-05b.D.C.agree_post}, CI \res{qp.15b-05b.D.C.agree_post.ci}; seam \res{qp.15b-05b.D.C.jump}, CI \res{qp.15b-05b.D.C.jump.ci}. Task score is unchanged (\res{qp.15b-05b.D.C.task}, CI \res{qp.15b-05b.D.C.task.ci}).
+\item D is far below A$'$. Task \res{qp.15b-05b.D.A2.task}, CI \res{qp.15b-05b.D.A2.task.ci}; agreement \res{qp.15b-05b.D.A2.agree_post}, CI \res{qp.15b-05b.D.A2.agree_post.ci}; seam $+$\res{qp.15b-05b.D.A2.jump}, CI \res{qp.15b-05b.D.A2.jump.ci}.
+\end{itemize}
+A restart (A) produces exactly B's text, because decoding is greedy, and before that it retracts every token already shown: 8, 32 or 48 depending on the task, \res{q.15b-05b.A.lost} on average.

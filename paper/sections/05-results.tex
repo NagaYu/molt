@@ -39,6 +39,18 @@ Dashed: the receiver reading the same prefix natively (what re-prefill achieves)
 \label{fig:survival}
 \end{figure}
 
+\begin{figure}[t]\centering
+\includegraphics[width=0.8\linewidth]{../figures/paper/footprint_timeline_15b-05b.pdf}
+\caption{Experiment M, 1.5B$\to$0.5B at $h=\res{m.15b-05b.bandh}$\,MiB (inside the band). phys\_footprint sampled at $\sim$1\,kHz by the external watchdog, aligned at the start of the switch; $\times$ marks the watchdog's kill.}
+\label{fig:timeline}
+\end{figure}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.6\linewidth]{../figures/paper/resume_cost.pdf}
+\caption{Experiment R. Compute to resume as a function of context at the switch, with both models resident (load costs excluded; median of \res{r.15b-05b.repeats} interleaved repeats).}
+\label{fig:resumecost}
+\end{figure}
+
 \begin{table}[t]\centering\small
 \caption{Memory schedules. All of them compute the same transfer; they differ only in what is resident when.}
 \label{tab:schedules}
