@@ -170,12 +170,17 @@ class PairStats:
 
 def collect(models: Dict[str, object], pairs: Sequence[Tuple[str, str]],
             sequences: Iterable[Sequence[int]], stride: int = HEO_STRIDE,
-            batch_rows: int = 1024, progress=None) -> Dict[Tuple[str, str], PairStats]:
+            batch_rows: int = 1024, progress=None,
+            stats: Optional[Dict[Tuple[str, str], "PairStats"]] = None, start: int = 0,
+            checkpoint=None) -> Dict[Tuple[str, str], PairStats]:
     """One pass over ``sequences``; every model runs each sequence once and every
-    requested pair's moments are updated from the shared features."""
-    stats = {p: PairStats(Geometry.from_model(models[p[0]]), Geometry.from_model(models[p[1]]),
-                          R.RopeSpec.from_model(models[p[0]]), R.RopeSpec.from_model(models[p[1]]))
-             for p in pairs}
+    requested pair's moments are updated from the shared features.
+
+    ``stats``/``start`` resume an interrupted pass; ``checkpoint(i, stats)`` is
+    called after each flush with the number of sequences consumed so far."""
+    stats = stats or {p: PairStats(Geometry.from_model(models[p[0]]), Geometry.from_model(models[p[1]]),
+                                   R.RopeSpec.from_model(models[p[0]]), R.RopeSpec.from_model(models[p[1]]))
+                      for p in pairs}
     used = sorted({m for p in pairs for m in p})
     buf: Dict[str, List[Tuple[mx.array, mx.array]]] = {m: [] for m in used}
     rows = 0
@@ -193,12 +198,16 @@ def collect(models: Dict[str, object], pairs: Sequence[Tuple[str, str]],
         rows = 0
 
     for i, seq in enumerate(sequences):
+        if i < start:
+            continue
         ids = mx.array([list(seq)])
         for m in used:
             buf[m].append(features(models[m], ids, stride))
         rows += buf[used[0]][-1][0].shape[0]
         if rows >= batch_rows:
             flush()
+            if checkpoint:
+                checkpoint(i + 1, stats)
         if progress:
             progress(i)
     flush()

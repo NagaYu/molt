@@ -36,7 +36,7 @@ from molt_mlx.generate import prefill
 from molt_mlx.mappers import KVMapper
 from molt_mlx import rope as R
 
-mx.set_cache_limit(1 << 30)   # offline script: keep MLX's buffer cache bounded
+mx.set_cache_limit(256 << 20)  # offline script: keep MLX's buffer cache small (shared, swapping machine)
 
 KS = (1, 2, 4, 8, 16, "all")
 LAMS = (0.0, 1e-3, 1e-2, 1e-1, 1.0)
@@ -55,19 +55,40 @@ def corpus():
 
 
 def stage_collect(src, dst, n_calib, stride, path):
+    """Collect moments; checkpoints every 25 sequences so an interrupted run
+    resumes where it stopped (the 3B pair takes hours on a shared machine)."""
     if path.exists():
         log("stats cached:", path)
         return
     c = corpus()
     seqs = c.splits["calib"][:n_calib]
+    ck, ck_meta = path.with_suffix(".partial.safetensors"), path.with_suffix(".partial.json")
+    stats, start = None, 0
+    if ck.exists() and ck_meta.exists():
+        start = json.loads(ck_meta.read_text())["consumed"]
+        stats = {(src, dst): fit.PairStats.load_raw(str(ck))}
+        log(f"resuming from checkpoint: {start} sequences consumed")
     models = {src: tiers.load_model(src), dst: tiers.load_model(dst)}
     t0 = time.time()
-    st = fit.collect(models, [(src, dst)], seqs, stride=stride,
+    last = [start]
+
+    def checkpoint(consumed, st):
+        if consumed - last[0] >= 25:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            st[(src, dst)].save_raw(str(ck))
+            ck_meta.write_text(json.dumps(dict(consumed=consumed)))
+            last[0] = consumed
+
+    st = fit.collect(models, [(src, dst)], seqs, stride=stride, stats=stats, start=start,
+                     checkpoint=checkpoint,
                      progress=lambda i: (i + 1) % 25 == 0 and log(
                          f"collect {i + 1}/{len(seqs)} ({time.time() - t0:.0f}s, "
                          f"footprint {footprint_bytes() / 2**30:.2f} GiB)"))[(src, dst)]
     path.parent.mkdir(parents=True, exist_ok=True)
     st.save_raw(str(path))
+    for p in (ck, ck_meta):
+        if p.exists():
+            p.unlink()
     log(f"collected n={st.n} rows in {time.time() - t0:.0f}s ->", path)
     del models, st
     gc.collect(); mx.clear_cache()
