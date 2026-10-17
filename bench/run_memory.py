@@ -53,6 +53,7 @@ def run(pair, cond, pid, cap, ballast, out_dir: Path, tag: str):
     prog = Path(str(wj) + ".progress.jsonl")
     events = [json.loads(l) for l in prog.read_text().splitlines()] if prog.exists() else []
     rec = dict(pair=pair, cond=cond, id=pid, cap_mib=cap, ballast_mib=ballast, tag=tag, rc=rc,
+               error=(not res.killed) and (rc != 0 or worker is None),
                killed=res.killed, killed_in=res.killed_in_phase(), peak_mib=res.peak_mib,
                phase_peaks_mib=res.phase_peaks_mib(), max_gap_ms=res.max_gap_us() / 1000,
                samples=res.samples, wall_s=time.time() - t0, worker=worker,
@@ -98,7 +99,7 @@ def main():
                 for cond in a.conds.split(","):
                     r = run(a.pair, cond, pid, cap, ballast, root / f"h{int(h)}", f"r{rep}")
                     print(f"[{time.time() - t0:6.0f}s] h={h:.0f} cap={cap} {cond:16s} {pid} "
-                          f"{'KILLED in ' + str(r['killed_in']) if r['killed'] else 'ok'} "
+                          f"{'KILLED in ' + str(r['killed_in']) if r['killed'] else ('ERROR rc=' + str(r['rc']) if r.get('error') else 'ok')} "
                           f"peak={r['peak_mib']:.0f}", flush=True)
 
 

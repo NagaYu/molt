@@ -23,7 +23,7 @@ D with del-only and D with clear-no-wait test the naive freeing variants.
 
 \paragraph{Jetsam emulation.}
 A separate C process polls the worker's \texttt{proc\_pid\_rusage} at about 1\,kHz.
-It records the instantaneous phys\_footprint and the kernel ledger's lifetime maximum (\texttt{ri\_lifetime\_max\_phys\_footprint}), and sends \texttt{SIGKILL} the moment either exceeds the cap.
+It records the instantaneous phys\_footprint and the kernel ledger's lifetime maximum (\texttt{ri\_lifetime\_max\allowbreak\_phys\_\allowbreak footprint}), and sends \texttt{SIGKILL} the moment either exceeds the cap.
 The lifetime maximum cannot miss a spike between samples.
 Phase labels written by the worker attribute every sample to a phase.
 

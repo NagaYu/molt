@@ -121,9 +121,10 @@ def memory_summary(pair):
         w = [r["worker"] for r in rs if r.get("worker")]
         mig = [x.get("migration") for x in w if x.get("migration")]
         en = [x.get("energy_migration") for x in w if x.get("energy_migration")]
+        ok = [r for r in rs if not r.get("error")]          # a crash is not a survival
         out[str(h)][cond] = dict(
-            n=len(rs), survived=sum(not r["killed"] for r in rs),
-            survival=ci([0.0 if r["killed"] else 1.0 for r in rs]),
+            n=len(ok), errors=len(rs) - len(ok), survived=sum(not r["killed"] for r in ok),
+            survival=ci([0.0 if r["killed"] else 1.0 for r in ok]),
             peak_mib=dict(median=median([r["peak_mib"] for r in rs]),
                           max=max(r["peak_mib"] for r in rs), min=min(r["peak_mib"] for r in rs)),
             cap_mib=rs[0]["cap_mib"],

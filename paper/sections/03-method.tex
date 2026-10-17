@@ -55,6 +55,7 @@ The \emph{ordered} schedule therefore runs as follows:
 \emph{clear-no-wait} is the call a developer would write.
 
 \paragraph{The trigger.}
-Before every token the loop reads the headroom, which is \texttt{os\_proc\_available\_memory()} on iOS and $\text{cap}-\text{phys\_footprint}$ on the Mac.
+Before every token the loop reads the headroom.
+On iOS that is the return value of \texttt{os\_proc\_available\_memory()}; on the Mac it is $\text{cap}-\text{phys\_footprint}$.
 It migrates when the headroom falls below what \emph{the chosen schedule} needs plus the next demand chunk.
 Each schedule thus gets its own best trigger, and a co-resident schedule is never killed merely for reacting late.

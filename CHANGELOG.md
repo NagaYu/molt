@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.2.0 — research rebuild on MLX
+
+Scope narrowed to what prior work does not cover: switching models **mid-decode**,
+**under a per-process memory limit**, with the two models **never co-resident**.
+
+### Withdrawn from 0.1
+- RoPE un-rotate/re-rotate around a linear KV map, and closed-form ridge maps
+  between sizes of one family, are prior work (Heo et al., arXiv:2608.03893).
+  0.1 presented the former as its own key detail; that claim is withdrawn.
+- Throughput is no longer a headline metric.
+
+### Added
+- `mlx/molt_mlx`: MLX implementation, including a faithful reproduction of the
+  Heo et al. mapper (baseline C). The rest:
+  - phys_footprint probe and kernel lifetime max;
+  - external C watchdog that SIGKILLs over a cap (jetsam emulation);
+  - memory-ordered migration (synchronize + clear + wait before loading);
+  - native sink/tail anchors;
+  - rootless energy (per-process CPU, system GPU via IOReport).
+- Test guaranteeing the ordered schedule's kernel peak footprint stays under the
+  cap while colocated and del-only are killed.
+- `bench/`: experiments I/Q/M with process isolation, judge scoring, bootstrap
+  CIs, human-eval kit, `powermetrics` cross-check.
+- `ios/`: MoltCore Swift package (self-tested on macOS); device app and protocol
+  (not yet run on a device).
+- `paper/`: arXiv draft whose numbers are all generated macros.
+
 ## 0.1.0 — first complete prototype
 
 Elastic on-device inference: a running generation migrates between models of

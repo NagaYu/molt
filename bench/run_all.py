@@ -46,6 +46,17 @@ def main():
                 print("fit failed; skipping pair", pair, flush=True)
                 continue
         refresh()
+        smoke = RESULTS / "smoke" / pair
+        bad = []
+        for cond in ("C", "D", "A2", "D_depth"):
+            out = smoke / f"{cond}.json"
+            if not out.exists() and step("bench.worker", "--pair", pair, "--cond", cond, "--ids",
+                                         "needle-00", "--max-new", "12", "--pressure-at", "6",
+                                         "--out", str(out)) != 0:
+                bad.append(cond)
+        if bad:
+            print("smoke failed for", bad, "- stopping before the long runs", flush=True)
+            return
         step("bench.run_memory", "--pair", pair)
         refresh()
         if not (RESULTS / "intrinsic" / f"{pair}.json").exists():

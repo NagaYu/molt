@@ -111,7 +111,8 @@ def main():
                     "|---:|---:|---|---:|---:|---|---:|---:|---:|"]
             for h in sorted(mm["cells"], key=int):
                 for cond, x in mm["cells"][h].items():
-                    out.append(f"| {h} | {x['cap_mib']:.0f} | {COND.get(cond, cond)} | {x['survived']}/{x['n']} | "
+                    err = f" (+{x['errors']} crashed, excluded)" if x.get("errors") else ""
+                    out.append(f"| {h} | {x['cap_mib']:.0f} | {COND.get(cond, cond)} | {x['survived']}/{x['n']}{err} | "
                                f"{x['peak_mib']['max']:.0f} | {', '.join(x['killed_in']) or '—'} | "
                                f"{c(x['time_to_resume_s'], 2)} | {c(x['energy_mig_cpu_j'], 2)} | {c(x['energy_mig_gpu_j'], 2)} |")
             out.append("")

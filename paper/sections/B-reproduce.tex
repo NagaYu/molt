@@ -1,12 +1,16 @@
 \section{Reproducing every number}\label{app:repro}
-\begin{verbatim}
-python -m pytest mlx/tests --import-mode=importlib     # every module's selftest + peak test
-python -m bench.fit_mappers --pair 1.5b-0.5b           # fit, sweep, select (held-out only)
-python -m bench.intrinsic   --pair 1.5b-0.5b           # experiment I
-python -m bench.run_quality --pair 1.5b-0.5b           # experiment Q (one process per shard)
-python -m bench.run_memory  --pair 1.5b-0.5b           # experiment M (one process per run)
-python -m bench.score       --pair 1.5b-0.5b           # judge scores
-python -m bench.analyze && python figures/make_figures.py   # summary, figures, this paper's macros
-cd ios && swift run MoltCoreSelfTest                   # Swift core
-\end{verbatim}
-Figures and every number in the text are produced by the last command from \texttt{bench/results}; none is typed by hand.
+{\small\begin{verbatim}
+python -m pytest mlx/tests --import-mode=importlib  # selftests + peak test
+python -m bench.facts                     # MLX freeing + energy facts
+python -m bench.fit_mappers --pair 1.5b-0.5b   # fit, sweep, select
+python -m bench.intrinsic   --pair 1.5b-0.5b   # experiment I
+python -m bench.run_memory  --pair 1.5b-0.5b   # experiment M
+python -m bench.run_quality --pair 1.5b-0.5b   # experiment Q
+python -m bench.score       --pair 1.5b-0.5b   # judge scores
+python -m bench.analyze                   # bench/results/summary.json
+python figures/make_paper_figures.py      # figures + this paper's macros
+python -m bench.make_results_md           # RESULTS.md
+cd ios && swift run MoltCoreSelfTest      # Swift core
+\end{verbatim}}
+\noindent \texttt{python -m bench.run\_all} runs the middle block for both pairs, resumably.
+Figures and every number in the text are produced from \texttt{bench/results}; none is typed by hand.
