@@ -21,3 +21,12 @@ Native anchors help, but only a little.
 With no anchors the NLL is \res{fit.15b-05b.anc.0_0}; the best setting within the 32-token tail budget is \res{fit.15b-05b.anchor} at \res{fit.15b-05b.anchor_nll}.
 A 128-token tail reaches \res{fit.15b-05b.anc.4_128}, and re-reading everything reaches \res{fit.15b-05b.anc.0_all}.
 On this intrinsic measure no partial-native setting closes the gap to re-prefill.
+
+\paragraph{3B$\to$1.5B, matched KV geometry (2 KV heads, $d_h=128$; the setting Heo et al.\ study).}
+NLL improves with every increase in $k$, from \res{fit.3b-15b.heok1.nll} at $k=1$ to \res{fit.3b-15b.heokall.nll} at $k=$ all \res{fit.3b-15b.nsrc} source layers.
+So $k^*=\res{fit.3b-15b.kstar}$, and the mapper is \res{fit.3b-15b.kstar_mib}\,MiB in fp16, a sizeable fraction of the receiver itself.
+The receiver reading natively scores \res{fit.3b-15b.native_dst_nll}, so the transfer costs \res{fit.3b-15b.gap_nll}~nats per token.
+That is less than for the mismatched pair, but still a cost against re-reading.
+Depth-linear is again far behind: \res{fit.3b-15b.depth_nll}.
+The $\lambda$ sweep is flat to $0.1$ (\res{fit.3b-15b.lam.0.0}--\res{fit.3b-15b.lam.0.1}) and rises at $1$ (\res{fit.3b-15b.lam.1.0}).
+Anchors behave as before: \res{fit.3b-15b.anc.0_0} with none, \res{fit.3b-15b.anchor_nll} at \res{fit.3b-15b.anchor}, and \res{fit.3b-15b.anc.0_all} for a full re-read.

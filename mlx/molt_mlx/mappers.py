@@ -121,7 +121,13 @@ class KVMapper:
             k = yk.reshape(B, T, H, D).transpose(0, 2, 1, 3)
             v = yv.reshape(B, T, H, D).transpose(0, 2, 1, 3)
             k = R.apply(k, self.dst_rope, offset)
-            out.append((k.astype(dt), v.astype(dt)))
+            k, v = k.astype(dt), v.astype(dt)
+            # Materialise layer by layer.  Left lazy, MLX would evaluate every
+            # layer's float32 weight copies and concatenated inputs at once — a
+            # transient of hundreds of MiB for a k=all mapper — which is an
+            # artefact of evaluation order, not of the mapping.
+            mx.eval(k, v)
+            out.append((k, v))
         return out
 
     # -- persistence ----------------------------------------------------

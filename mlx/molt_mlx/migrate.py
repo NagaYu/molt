@@ -16,7 +16,8 @@ Two separable pieces:
     on MLX (measured in ``footprint.selftest`` and ``tests/test_peak_footprint.py``):
 
     ``colocated``      load destination (+mapper) while the source is resident,
-                       map, then drop the source — the prefill-handoff shape.
+                       map, then release the source properly (synchronise,
+                       clear, wait) — the prefill-handoff shape.
     ``del_only``       drop every reference to the source first.  MLX keeps the
                        freed buffers in its allocator cache and does not reuse them
                        for differently-sized arrays, so footprint does not fall:
@@ -228,8 +229,15 @@ def migrate(session: Session, plan: Plan, load_dst: Callable[[], object],
     rep.kv_dst_mib = kvcache.nbytes(new.kv_pairs()) / MiB
     pairs = mapper = None
     if sched == "colocated":
+        # the hand-off shape loads before it releases; once done, it releases
+        # properly (synchronise, clear, wait) — sloppy freeing is not what C tests
         clock("release_src")
-        drop_source(clear=True, wait=False)
+        drop_source(clear=True, wait=True)
+    if sched in ("ordered", "colocated"):
+        # careful schedules return switch-time temporaries (mapping inputs,
+        # prefill activations) to the OS; the naive ablations deliberately do not
+        mx.synchronize()
+        mx.clear_cache()
     clock("resumed")
     rep.seconds = time.perf_counter() - t0
     rep.mlx_peak_mib = mx.get_peak_memory() / MiB
