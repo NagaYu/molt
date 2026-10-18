@@ -96,8 +96,50 @@ def open_items() -> List[Dict]:
             for i, t in enumerate(OPEN)]
 
 
+def long_items(n: int = 3, docs_per_item: int = 2) -> List[Dict]:
+    """~2 000-token contexts for the long-context resume test: consecutive
+    FineWeb-Edu *evaluation* documents (never used for fitting), then a request
+    to summarise.  Only survival and time to resume are measured on these."""
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "mlx"))
+    from molt_mlx import calib_data, tiers
+    tok = tiers.load_tokenizer()
+    corpus = calib_data.load(lambda s: tok.encode(s, add_special_tokens=False), "qwen2.5")
+    ev = corpus.splits["eval"]
+    out = []
+    for i in range(n):
+        text = "\n\n".join(tok.decode(ev[i * docs_per_item + j]) for j in range(docs_per_item))
+        out.append(dict(id=f"long-{i:02d}", kind="long", answer=None, max_new=64, pressure_at=16,
+                        text=text + "\n\nSummarize the text above in three sentences."))
+    return out
+
+
+def long_needle_items(n: int = 12, seed: int = 11, first_doc: int = 6) -> List[Dict]:
+    """The needle task at long context: the 14-record list, then ~1 800 tokens of
+    FineWeb-Edu *evaluation* text (documents not used by ``long_items``), then
+    the question.  The switch lands before the value, as in ``needle``."""
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "mlx"))
+    from molt_mlx import calib_data, tiers
+    tok = tiers.load_tokenizer()
+    corpus = calib_data.load(lambda s: tok.encode(s, add_special_tokens=False), "qwen2.5")
+    ev = corpus.splits["eval"]
+    base = needle_items(n, seed=seed)
+    out = []
+    for i, it in enumerate(base):
+        lst, q = it["text"].split("\n\nWhat is the access code", 1)
+        filler = tok.decode(ev[first_doc + 2 * i][:900] + ev[first_doc + 2 * i + 1][:900])
+        text = (lst + "\n\nBackground reading (unrelated to the question):\n" + filler +
+                "\n\nWhat is the access code" + q)
+        out.append(dict(it, id=f"longneedle-{i:02d}", kind="longneedle", text=text))
+    return out
+
+
 def build(n_gsm8k: int = 40, n_needle: int = 24) -> List[Dict]:
-    return gsm8k_items(n_gsm8k) + needle_items(n_needle) + open_items()
+    return (gsm8k_items(n_gsm8k) + needle_items(n_needle) + open_items() + long_items()
+            + long_needle_items())
 
 
 def load(kinds=None) -> List[Dict]:

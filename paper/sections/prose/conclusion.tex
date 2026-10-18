@@ -1,9 +1,9 @@
-We moved a generation from a larger to a smaller model mid-decode, triggered by the app's headroom, without ever holding both.
-Against a faithful reproduction of the closed-form KV map of~\citep{heo2026crossmodel}, the measurements give one result that holds and two that do not.
+We moved a generation from a larger to a smaller model mid-decode, triggered by the app's headroom, without ever holding both models.
+We compared this against a faithful reproduction of the closed-form KV map of~\citep{heo2026crossmodel}, on two Qwen2.5 pairs and at two context lengths.
 \begin{itemize}
-\item \textbf{Holds.} The memory order decides survival. Loading the receiver before releasing the sender, as a prefill hand-off does, is killed whenever headroom is below the receiver plus mapper. Releasing first survives.
-\item \textbf{Does not hold.} Mapping the cache did not carry the prompt's content into the small model, with or without our anchors.
-\item \textbf{Does not hold.} Re-reading the transcript was better on every quality measure, and also faster at the context lengths we ran.
+\item \textbf{One result holds.} The memory order decides survival. Loading the receiver before releasing the sender, as a prefill hand-off does, is killed whenever the headroom is below the receiver plus the mapper. Releasing first survives.
+\item \textbf{The mapping did not carry the prompt's content.} This holds with and without our anchors.
+\item \textbf{Re-reading the transcript was better on every quality measure.} The transfer resumes faster only at long context, and there it loses the answer.
 \end{itemize}
-For an on-device app facing a per-process limit mid-answer, our data recommend a release-first re-prefill, not KV transfer.
-Device measurements on iPhones (\cref{sec:limits}) are the next step, because iOS's own limits and reclaim behaviour could move the band.
+For an on-device app that reaches its memory limit mid-answer, our data recommend a release-first re-prefill, not KV transfer.
+iPhone measurements (\cref{sec:limits}) are the next step, because iOS's own limits and reclaim behaviour could move the band.

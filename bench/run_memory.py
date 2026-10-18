@@ -76,14 +76,17 @@ def main():
     ap.add_argument("--h", default=None, help="comma-separated headroom values (MiB)")
     ap.add_argument("--cache-limit-mib", type=float, default=None)
     ap.add_argument("--prompts", default=",".join(PROMPT_IDS))
+    ap.add_argument("--sub", default="", help="suffix for the result folder (separate experiments)")
+    ap.add_argument("--probe", default=PROBE_ID, help="prompt used to measure S and S_small")
     a = ap.parse_args()
     global CACHE_LIMIT
     CACHE_LIMIT = a.cache_limit_mib
     sub = a.pair if a.cache_limit_mib is None else f"{a.pair}_cache{int(a.cache_limit_mib)}"
+    sub += a.sub
     root = RESULTS / "raw" / "memory" / sub
     # 1) probe S and S_small: uncapped, no ballast, watchdog in monitor-only mode
-    big = run(a.pair, "static_big", PROBE_ID, 0, 0, root / "probe", "probe")
-    small = run(a.pair, "B", PROBE_ID, 0, 0, root / "probe", "probe")
+    big = run(a.pair, "static_big", a.probe, 0, 0, root / "probe", "probe")
+    small = run(a.pair, "B", a.probe, 0, 0, root / "probe", "probe")
     S = big["phase_peaks_mib"]["decode_src"]
     S_small = small["phase_peaks_mib"]["decode_src"]
     src, dst = a.pair.split("-")

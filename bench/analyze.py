@@ -81,7 +81,7 @@ def quality_summary(pair):
     out = {}
     for cond, rs in by.items():
         acc = {}
-        for kind in ("gsm8k", "needle"):
+        for kind in ("gsm8k", "needle", "longneedle"):
             v = [r["task_correct"] for r in rs if r["kind"] == kind]
             acc[kind] = ci(v)
         trunc = {kind: ci([float(r.get("n_gen") == mx_new.get(r["id"])) for r in rs
@@ -101,10 +101,16 @@ def quality_summary(pair):
     def per_item(cond, key):
         return {r["id"]: r[key] for r in by.get(cond, []) if r.get(key) is not None}
     comps = {}
+    def per_kind(cond, key, kind):
+        return {r["id"]: r[key] for r in by.get(cond, []) if r.get(key) is not None and r["kind"] == kind}
     for a in by:
         for b in ("A2", "C", "B"):
             if a == b or b not in by:
                 continue
+            comps[f"{a}-{b}-longneedle"] = dict(
+                task=paired(per_kind(a, "task_correct", "longneedle"), per_kind(b, "task_correct", "longneedle")),
+                resume=paired(per_kind(a, "time_to_new_content_s", "longneedle"),
+                              per_kind(b, "time_to_new_content_s", "longneedle")))
             comps[f"{a}-{b}"] = dict(
                 jump=paired(per_item(a, "jump"), per_item(b, "jump")),
                 agree_post=paired(per_item(a, "agree_post"), per_item(b, "agree_post")),
@@ -128,6 +134,31 @@ def _phase_durations(migs):
         for i, p in enumerate(ph):
             out[p["name"]].append(ts[i + 1] - ts[i])
     return out
+
+
+def long_quality(pair):
+    """Judge scores of the long-context memory runs (killed runs excluded here;
+    their survival is reported in the memory table)."""
+    p = RESULTS / "scored" / "memory" / f"{pair}_long.jsonl"
+    if not p.exists():
+        return None
+    rows = [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+    by = defaultdict(list)
+    for r in rows:
+        if r.get("completed"):
+            by[r["cond"]].append(r)
+    out = {c: dict(n=len(rs), agree_post=ci([r.get("agree_post") for r in rs]),
+                   jump=ci([r.get("jump") for r in rs]), nll_post=ci([r.get("nll_post") for r in rs]))
+           for c, rs in by.items()}
+    item = lambda c, k: {r["id"]: r[k] for r in by.get(c, []) if r.get(k) is not None}
+    paired = {f"{a}-{b}": dict(agree_post=paired_(item(a, "agree_post"), item(b, "agree_post")),
+                               jump=paired_(item(a, "jump"), item(b, "jump")))
+              for a in ("D", "C_ordered") for b in ("A2",) if a in by and b in by}
+    return dict(conds=out, paired=paired)
+
+
+def paired_(x, y):
+    return paired(x, y)
 
 
 def memory_summary(pair, sub=None):
@@ -174,7 +205,9 @@ def main():
     for pair in PAIRS:
         s["pairs"][pair] = dict(fit=fit_summary(pair), intrinsic=intrinsic_summary(pair),
                                 quality=quality_summary(pair), memory=memory_summary(pair),
-                                memory_cache20=memory_summary(pair, f"{pair}_cache20"))
+                                memory_cache20=memory_summary(pair, f"{pair}_cache20"),
+                                memory_long=memory_summary(pair, f"{pair}_long"),
+                                long_quality=long_quality(pair))
     s["resume_cost"] = {p: load_json(RESULTS / "resume_cost" / f"{p}.json") for p in PAIRS}
     s["facts"] = dict(platform=load_json(RESULTS / "facts" / "platform.json"),
                       peak_test=load_json(RESULTS / "facts" / "peak_test.json"))

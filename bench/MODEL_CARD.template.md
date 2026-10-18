@@ -48,14 +48,18 @@ Two interpretations differ from or extend the paper, and are documented in
 
 ## Read this first
 
-In molt's own benchmark (1.5B → 0.5B, switch mid-decode), the receiver
-decoding from a cache mapped with these weights keeps the topic and voice of
-the text but loses its specifics. Needle accuracy is {{q.15b-05b.C.needle}} with the map
-alone and {{q.15b-05b.D.needle}} with molt's native anchors, against
-{{q.15b-05b.A2.needle}} when the small model simply re-reads the transcript.
-Re-reading was also faster to resume at the context lengths tested. Use these
-mappers to study KV transfer. If you are switching models in an app, the data
-in [RESULTS.md](https://github.com/NagaYu/molt/blob/main/RESULTS.md) recommend
+In molt's own benchmark the receiver decoding from a cache mapped with these
+weights keeps the topic and voice of the text but loses its specifics. On a
+needle task with a 3B → 1.5B switch right before the answer:
+
+- the map alone answers {{q.3b-15b.C.needle}};
+- with molt's native anchors it answers {{q.3b-15b.D.needle}};
+- letting the small model re-read the transcript answers {{q.3b-15b.A2.needle}}.
+
+At ~2 100 tokens the mapped cache answers {{q.3b-15b.D.longneedle}} against
+{{q.3b-15b.A2.longneedle}}, even though it resumes faster. Use these mappers to
+study KV transfer. If you are switching models in an app, the data in
+[RESULTS.md](https://github.com/NagaYu/molt/blob/main/RESULTS.md) recommend
 releasing the big model first and then re-prefilling.
 
 ## Files

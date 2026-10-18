@@ -195,7 +195,7 @@ save(fig, "intrinsic_context")
 # ------------------------------------------------------------------ quality
 QC = ["big", "A", "A2", "B", "C", "D", "C_ordered", "D_depth"]
 tab_q = []
-fig, axes = plt.subplots(len(pairs) or 1, 3, figsize=(13, 3.2 * max(1, len(pairs))), squeeze=False)
+fig, axes = plt.subplots(len(pairs) or 1, 4, figsize=(17, 3.2 * max(1, len(pairs))), squeeze=False)
 for row, pair in enumerate(pairs or ["-"]):
     q = S["pairs"].get(pair, {}).get("quality")
     if not q:
@@ -204,11 +204,13 @@ for row, pair in enumerate(pairs or ["-"]):
         continue
     pl = pair.replace(".", "")
     conds = [c for c in QC if c in q["conds"]]
-    for ax, (metric, title) in zip(axes[row], (("gsm8k", "GSM8K exact"), ("needle", "needle exact"),
+    for ax, (metric, title) in zip(axes[row], (("gsm8k", "GSM8K exact"), ("needle", "needle exact (~300 tok)"),
+                                              ("longneedle", "needle exact (~2 100 tok)"),
                                               ("agree_post", "judge agreement after switch"))):
         vals, los, his = [], [], []
         for c in conds:
             cc = q["conds"][c]["acc"].get(metric) if metric != "agree_post" else q["conds"][c]["agree_post"]
+            cc = cc or None
             vals.append(cc["mean"] if cc else float("nan"))
             los.append(cc["mean"] - cc["lo"] if cc else 0); his.append(cc["hi"] - cc["mean"] if cc else 0)
         ax.bar(range(len(conds)), vals, yerr=[los, his], color=[COLORS[c] for c in conds], capsize=2)
@@ -219,6 +221,7 @@ for row, pair in enumerate(pairs or ["-"]):
         key = c.replace("_", "")
         put_ci(f"q.{pl}.{key}.gsm8k", cq["acc"]["gsm8k"], 3)
         put_ci(f"q.{pl}.{key}.needle", cq["acc"]["needle"], 3)
+        put_ci(f"q.{pl}.{key}.longneedle", cq["acc"].get("longneedle"), 3)
         put_ci(f"q.{pl}.{key}.agree", cq["agree_post"], 3)
         put_ci(f"q.{pl}.{key}.jump", cq["jump"], 3)
         put_ci(f"q.{pl}.{key}.lost", cq["lost_tokens"], 1)
@@ -229,16 +232,19 @@ for row, pair in enumerate(pairs or ["-"]):
                 M[f"q.{pl}.{key}.trunc.{kind}"] = f"{round(t['mean'] * t['n'])}/{t['n']}"
         g = cq["acc"]["gsm8k"]; nd = cq["acc"]["needle"]; ag = cq["agree_post"]; jp = cq["jump"]
         rs = cq["time_to_new_content_s"]
+        ln = cq["acc"].get("longneedle")
         tab_q.append((tex(PAIR_LABEL[pair]), tex(COND_LABEL[c]),
                       f"{g['mean']:.2f}" if g else "--", f"{nd['mean']:.2f}" if nd else "--",
+                      f"{ln['mean']:.2f}" if ln else "--",
                       f"{ag['mean']:.3f}" if ag else "--", f"{jp['mean']:+.3f}" if jp else "--",
                       f"{cq['lost_tokens']['mean']:.0f}" if cq["lost_tokens"] else "--",
                       f"{rs['mean']:.2f}" if rs else "--"))
     for k, v in q["paired"].items():
-        a, b = k.split("-")
-        for metric in ("jump", "agree_post", "task"):
+        a, b, *kind = k.split("-")
+        suffix = f".{kind[0]}" if kind else ""
+        for metric in ("jump", "agree_post", "task", "resume"):
             if v.get(metric):
-                put_ci(f"qp.{pl}.{a.replace('_', '')}.{b}.{metric}", v[metric], 3)
+                put_ci(f"qp.{pl}.{a.replace('_', '')}.{b}{suffix}.{metric}", v[metric], 3)
     M[f"q.{pl}.n_items"] = str(q["n_items"])
     for kind, c in (q.get("context") or {}).items():
         M[f"q.{pl}.ctx.{kind}"] = f"{c['median']:.0f}"
@@ -358,9 +364,26 @@ if rc_pairs:
         M[f"r.{pl}.repeats"] = str(d["repeats"])
     save(fig, "resume_cost")
 
+# judge scores at long context
+for pair in pairs:
+    lq = S["pairs"].get(pair, {}).get("long_quality")
+    if not lq:
+        continue
+    pl = pair.replace(".", "")
+    for c, x in lq["conds"].items():
+        key = c.replace("_", "")
+        put_ci(f"lq.{pl}.{key}.agree", x["agree_post"], 3)
+        put_ci(f"lq.{pl}.{key}.jump", x["jump"], 3)
+        M[f"lq.{pl}.{key}.n"] = str(x["n"])
+    for k, v in lq["paired"].items():
+        a, b = k.split("-")
+        for metric in ("agree_post", "jump"):
+            if v.get(metric):
+                put_ci(f"lqp.{pl}.{a.replace('_', '')}.{b}.{metric}", v[metric], 3)
+
 # phase durations (median over runs) at every h, for the conditions that switch
 for pair in pairs:
-    for sub, tag in (("memory", ""), ("memory_cache20", "c20.")):
+    for sub, tag in (("memory", ""), ("memory_cache20", "c20."), ("memory_long", "long.")):
         mm = S["pairs"].get(pair, {}).get(sub)
         if not mm or not mm["cells"]:
             continue
@@ -375,15 +398,51 @@ for pair in pairs:
                 if tag:
                     M[f"m.{tag}{pl}.h{h}.{key}.surv"] = f"{cell['survived']}/{cell['n']}"
                     put(f"m.{tag}{pl}.h{h}.{key}.peak", cell["peak_mib"]["max"], 0)
+                    put_ci(f"m.{tag}{pl}.h{h}.{key}.resume", cell["time_to_resume_s"], 2)
+                    put_ci(f"m.{tag}{pl}.h{h}.{key}.ecpu", cell["energy_mig_cpu_j"], 2)
                 put(f"m.{tag}{pl}.h{h}.{key}.gpubase", (cell.get("gpu_baseline_w") or {}).get("mean"), 1)
 
 # ------------------------------------------------------------------ write
+def memory_matrix():
+    """Survived/runs for every (condition, h), per pair and allocator setting —
+    the full per-run table (peaks, kill phases, times) is in RESULTS.md."""
+    blocks = []
+    for pair in pairs:
+        for sub, tag in (("memory", "default MLX cache"), ("memory_cache20", "20\\,MiB cache limit")):
+            mm = S["pairs"].get(pair, {}).get(sub)
+            if not mm or not mm["cells"]:
+                continue
+            hs = sorted(int(h) for h in mm["cells"])
+            conds = [c for c in MC if any(c in mm["cells"][str(h)] for h in hs)]
+            head = f"\\multicolumn{{{len(hs) + 1}}}{{l}}{{\\textbf{{{tex(PAIR_LABEL[pair])}}}, {tag}; " \
+                   f"co-resident need $\\approx${mm['plan']['need_colocated']:.0f}\\,MiB}} \\\\"
+            hrow = "condition & " + " & ".join(f"$h={h}$" for h in hs) + " \\\\ \\midrule"
+            rows = []
+            for c in conds:
+                cells = [mm["cells"][str(h)].get(c) for h in hs]
+                rows.append(tex(COND_LABEL[c]) + " & " + " & ".join(
+                    f"{x['survived']}/{x['n']}" if x else "--" for x in cells) + " \\\\")
+            blocks.append((len(hs), head, hrow, rows))
+    if not blocks:
+        return tex_table([], [], "Experiment M.", "tab:memory", "l")
+    n = max(b[0] for b in blocks)
+    body = []
+    for _, head, hrow, rows in blocks:
+        body += [head, hrow] + rows + ["\\midrule"]
+    body[-1] = "\\bottomrule"
+    return ("\\begin{table}[t]\\centering\\small\\setlength{\\tabcolsep}{4pt}"
+            "\\caption{Experiment M: runs that survived / runs, per condition and headroom $h$ (MiB). "
+            "Every run is its own process under the watchdog. Peaks, kill phases and times for every cell are in RESULTS.md.}"
+            "\\label{tab:memory}\n\\begin{tabular}{l" + "r" * n + "}\\toprule\n" + "\n".join(body) +
+            "\n\\end{tabular}\\end{table}\n")
+
+
 def tex_table(rows, header, caption, label, colspec):
     if not rows:
         return (f"\\begin{{table}}[t]\\centering\\caption{{{caption}}}\\label{{{label}}}"
                 f"\\textcolor{{red}}{{\\textbf{{PENDING}}}}\\end{{table}}\n")
     body = "\n".join(" & ".join(str(c) for c in r) + r" \\" for r in rows)
-    return (f"\\begin{{table}}[t]\\centering\\small\\caption{{{caption}}}\\label{{{label}}}\n"
+    return (f"\\begin{{table}}[t]\\centering\\small\\setlength{{\\tabcolsep}}{{4pt}}\\caption{{{caption}}}\\label{{{label}}}\n"
             f"\\begin{{tabular}}{{{colspec}}}\\toprule\n{' & '.join(header)} \\\\\\midrule\n{body}\n"
             f"\\bottomrule\\end{{tabular}}\\end{{table}}\n")
 
@@ -394,12 +453,11 @@ tables = [
               "tab:fit", "llrrrrrrr"),
     tex_table(tab_lam, ["pair", "$\\lambda$", "held-out NLL [95\\% CI]"],
               "Ridge $\\lambda$ sweep at the selected $k^*$ (centred-covariance reading).", "tab:lambda", "llr"),
-    tex_table(tab_q, ["pair", "condition", "GSM8K", "needle", "agree$_{post}$", "jump", "lost", "resume (s)"],
-              "Experiment Q. Accuracy counts every item; jump = judge-NLL jump at the switch (16 tokens each side).",
-              "tab:quality", "llrrrrrr"),
-    tex_table(tab_m, ["pair", "$h$", "cap", "condition", "survived", "peak", "killed in", "resume (s)"],
-              "Experiment M: every cell. Peak = kernel lifetime-max phys\\_footprint (MiB).",
-              "tab:memory", "lrrlrrlr"),
+    tex_table(tab_q, ["pair", "condition", "GSM8K", "needle", "needle$_{2K}$", "agree$_{post}$", "jump", "lost", "resume (s)"],
+              "Experiment Q. Accuracy counts every item; needle$_{2K}$ embeds the same task in $\\sim$2\\,100 tokens of unrelated text. "
+              "jump = judge-NLL jump at the switch (16 tokens each side); resume = time until new content (all tasks).",
+              "tab:quality", "llrrrrrrr"),
+    memory_matrix(),
 ]
 (GEN / "tables.tex").write_text("\n".join(tables))
 lines = ["% generated by figures/make_paper_figures.py — do not edit"]

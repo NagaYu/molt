@@ -45,22 +45,22 @@ faithful reproduction of the method above (condition **C**). It is answered in
 or "re-prefill is better".
 
 <!-- results:begin -->
-**At a glance (Qwen2.5-1.5B → 0.5B, 4-bit, M2, jetsam emulation; [all numbers](RESULTS.md)):**
+**At a glance (Qwen2.5 4-bit, 3B → 1.5B and 1.5B → 0.5B, M2, jetsam emulation; [every number](RESULTS.md)):**
 
 - **Load before release** is the prefill hand-off shape (condition C, Heo et al.'s
-  mapper). It is killed whenever spare memory is below the 409 MiB it
-  needs (h = 345 MiB: 0/3 survived). **Release first** survives
-  every cell (3/3).
-- **But the transferred KV does not carry the prompt's content.** Needle
-  accuracy is 0.125 with molt's anchors and 0.208
-  without, against **0.958** when the small model simply re-reads
-  the transcript. Re-reading also resumed faster (0.48 s vs
-  0.79 s).
-- So the recommendation from our own data: **switch release-first, then
-  re-prefill**. KV transfer is cheaper only in raw compute, and only once the
-  context is long enough to pay for its extra release. Our switches, at
-  89–298 tokens, were never that long, and
-  its quality gap grows with context.
+  mapper). It is killed whenever spare memory is below what it needs
+  (1176 MiB for 3B → 1.5B: 0/3 survived at
+  h = 1112). **Release first** survives every cell of both pairs.
+- **But the transferred KV does not carry the prompt's content.** On a needle
+  task with a 3B → 1.5B switch right before the answer, molt answers
+  0.375, the plain map 0.583, and **re-reading the
+  transcript 1.000**. At ~2 100 tokens the transfer resumes
+  -3.114 s sooner but answers 0.083,
+  against 1.000.
+- **The recommendation from our own data: switch release-first, then
+  re-prefill.** molt's careful memory release matters only under MLX's
+  default cache. With the 20 MiB cache limit mlx-swift uses on iOS, plain
+  "drop then load" also survives.
 <!-- results:end -->
 
 ## What freeing a model actually takes on MLX (measured)

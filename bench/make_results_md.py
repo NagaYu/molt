@@ -86,19 +86,21 @@ def main():
         q = d.get("quality")
         out += ["### Experiment Q: quality when the switch lands mid-decode (no cap)", ""]
         if q:
-            out += ["| condition | GSM8K | needle | judge agreement after switch | seam jump (nats) | lost tokens | time to new content (s) |",
-                    "|---|---:|---:|---:|---:|---:|---:|"]
+            out += ["| condition | GSM8K | needle (~300 tok) | needle (~2 100 tok) | judge agreement after switch | seam jump (nats) | lost tokens | time to new content (s) |",
+                    "|---|---:|---:|---:|---:|---:|---:|---:|"]
             for cond in ("big", "A", "A2", "B", "C", "D", "C_ordered", "D_depth"):
                 x = q["conds"].get(cond)
                 if not x:
                     continue
-                out.append(f"| {COND[cond]} | {c(x['acc']['gsm8k'], 2)} | {c(x['acc']['needle'], 2)} | "
+                out.append(f"| {COND[cond]} | {c(x['acc']['gsm8k'], 2)} | {c(x['acc']['needle'], 2)} | {c(x['acc'].get('longneedle'), 2)} | "
                            f"{c(x['agree_post'])} | {c(x['jump'], 3, True)} | {c(x['lost_tokens'], 1)} | "
                            f"{c(x['time_to_new_content_s'], 2)} |")
             out += ["", "Paired differences (same items):", "",
-                    "| comparison | seam jump | agreement after switch | task score |", "|---|---:|---:|---:|"]
+                    "| comparison | seam jump | agreement after switch | task score | time to new content (s) |",
+                    "|---|---:|---:|---:|---:|"]
             for k, v in sorted(q["paired"].items()):
-                out.append(f"| {k} | {c(v['jump'], 3, True)} | {c(v['agree_post'], 3, True)} | {c(v['task'], 3, True)} |")
+                out.append(f"| {k} | {c(v.get('jump'), 3, True)} | {c(v.get('agree_post'), 3, True)} | "
+                           f"{c(v.get('task'), 3, True)} | {c(v.get('resume'), 2, True)} |")
             out.append("")
         else:
             out += ["PENDING", ""]
@@ -120,6 +122,21 @@ def main():
             out.append("")
         else:
             out += ["PENDING", ""]
+        for key, title in (("memory_cache20", "Experiment M with a 20 MiB MLX cache limit (mlx-swift-examples' iOS setting)"),
+                           ("memory_long", "Experiment M at long context (~2 100-token prompts, switch inside the band)")):
+            mm = d.get(key)
+            if not mm:
+                continue
+            out += [f"### {title}", "",
+                    f"S = {mm['plan']['S']:.0f} MiB, co-resident need ≈ {mm['plan']['need_colocated']:.0f} MiB.", "",
+                    "| h (MiB) | cap | condition | survived | peak MiB (max) | killed in | time to resume (s) | migration CPU J |",
+                    "|---:|---:|---|---:|---:|---|---:|---:|"]
+            for h in sorted(mm["cells"], key=int):
+                for cond, x in mm["cells"][h].items():
+                    out.append(f"| {h} | {x['cap_mib']:.0f} | {COND.get(cond, cond)} | {x['survived']}/{x['n']} | "
+                               f"{x['peak_mib']['max']:.0f} | {', '.join(x['killed_in']) or '—'} | "
+                               f"{c(x['time_to_resume_s'], 2)} | {c(x['energy_mig_cpu_j'], 2)} |")
+            out.append("")
     out += ["## Device, energy cross-check, human ratings", "",
             "- iPhone measurements: **PENDING** (protocol: `ios/README.md`). Device folders present: "
             + (", ".join(S.get("device") or []) or "none") + ".",

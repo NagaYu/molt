@@ -32,14 +32,14 @@ def task_score(item, text):
     from molt_mlx.metrics import gsm8k_answer
     if item["kind"] == "gsm8k":
         return float(gsm8k_answer(text) == item["answer"])
-    if item["kind"] == "needle":
+    if item["kind"] in ("needle", "longneedle"):
         nums = [t for t in __import__("re").findall(r"\d{4}", text)]
         return float(bool(nums) and nums[0] == item["answer"])
     return None
 
 
-def iter_runs(exp: str, pair: str):
-    root = RESULTS / "raw" / exp / pair
+def iter_runs(exp: str, pair: str, sub: str = ""):
+    root = RESULTS / "raw" / exp / (pair + sub)
     if exp == "quality":
         for f in sorted(root.glob("*/shard_*.json")):
             for r in json.loads(f.read_text())["runs"]:
@@ -56,6 +56,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pair", required=True)
     ap.add_argument("--exp", default="quality", choices=["quality", "memory"])
+    ap.add_argument("--sub", default="", help="memory sub-experiment folder suffix, e.g. _long")
     a = ap.parse_args()
     import mlx.core as mx
     mx.set_cache_limit(1 << 30)   # offline script: bounded MLX buffer cache
@@ -65,13 +66,13 @@ def main():
     tok = tiers.load_tokenizer()
     model = tiers.load_model(src)
     items = {p["id"]: p for p in P.load()}
-    out_path = RESULTS / "scored" / a.exp / f"{a.pair}.jsonl"
+    out_path = RESULTS / "scored" / a.exp / f"{a.pair}{a.sub}.jsonl"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     done = set()
     if out_path.exists():
         done = {(d["cond"], d["id"], d.get("tag"), d.get("cap_mib")) for d in map(json.loads, out_path.read_text().splitlines())}
     with open(out_path, "a") as fh:
-        for f, r in iter_runs(a.exp, a.pair):
+        for f, r in iter_runs(a.exp, a.pair, a.sub):
             if a.exp == "memory":
                 rec, w = r, r.get("worker")
                 key = (r["cond"], r["id"], r["tag"], r["cap_mib"])

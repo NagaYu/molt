@@ -12,8 +12,11 @@ and the two models are \emph{never resident together}.
 We implement this setting in MLX on Apple silicon and test it against an external jetsam emulator.
 We compare it with restart, always-small, re-prefill, and the closed-form ridge map of~\citep{heo2026crossmodel} applied mid-decode.
 That last baseline is reproduced to the letter and runs in the hand-off shape, with both models loaded.
-For 1.5B$\to$0.5B Qwen2.5 when the app has less spare memory than the \res{m.15b-05b.need}\,MiB a co-resident switch needs, the hand-off shape is killed while every release-first switch survives.
-But the mapped cache loses the prompt's specifics: needle accuracy is \res{q.15b-05b.D.needle} with our additions and \res{q.15b-05b.C.needle} without, against \res{q.15b-05b.A2.needle} for simply re-reading the transcript, which also resumed faster.
-We state plainly that, in the setting we claim, KV transfer is not the right way to switch.
+On two Qwen2.5 pairs (1.5B$\to$0.5B and 3B$\to$1.5B, 4-bit), a switch that loads the receiver before releasing the sender is killed whenever the app has less spare memory than it needs.
+Every release-first switch survives.
+But the transferred cache loses the prompt's specifics.
+On a needle task with a 3B$\to$1.5B switch just before the answer, the mapped cache answers \res{q.3b-15b.D.needle} with our additions and \res{q.3b-15b.C.needle} without, against \res{q.3b-15b.A2.needle} when the small model simply re-reads the transcript.
+At $\sim$2\,100 tokens the transfer resumes \res{qp.3b-15b.D.A2.longneedle.resume}\,s sooner but answers \res{q.3b-15b.D.longneedle} against \res{q.3b-15b.A2.longneedle}.
+In the setting we claim, KV transfer is not the right way to switch, and we state where our own hypothesis fails.
 iPhone measurements, energy on device, and human ratings are \pending{not yet collected}.
 \end{abstract}

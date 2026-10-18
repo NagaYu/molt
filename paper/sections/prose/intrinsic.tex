@@ -5,3 +5,8 @@ molt's anchors narrow it to \res{int.15b-05b.D.P768} at $P=768$.
 At $P=32$ the 32-token native tail covers the whole context, so D \emph{is} a re-prefill there (\res{int.15b-05b.D.P32}).
 Per token these gaps look small: about a tenth of a nat, against the \res{fit.15b-05b.native_src_nll}$\to$\res{fit.15b-05b.native_dst_nll} difference between the two models.
 \Cref{sec:results-quality} shows they are not small once the receiver generates freely.
+
+\paragraph{3B$\to$1.5B.}
+The matched-geometry pair shows the same shape with smaller gaps.
+C costs \res{int.3b-15b.C.P32} at $P=32$ and \res{int.3b-15b.C.P768} at $P=768$, CI \res{int.3b-15b.C.P768.ci}.
+D costs \res{int.3b-15b.D.P768} at $P=768$, CI \res{int.3b-15b.D.P768.ci}.

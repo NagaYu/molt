@@ -1,4 +1,4 @@
-\begin{table}[t]\centering\small\caption{Every fitted mapper. Held-out = documents disjoint from calibration and evaluation.}\label{tab:fit}
+\begin{table}[t]\centering\small\setlength{\tabcolsep}{4pt}\caption{Every fitted mapper. Held-out = documents disjoint from calibration and evaluation.}\label{tab:fit}
 \begin{tabular}{llrrrrrrr}\toprule
 pair & mapper & $k$ & params (M) & MiB & $R^2$ in & $R^2_K$ held & $R^2_V$ held & NLL held \\\midrule
 3B$\to$1.5B & depth\_linear & 1 & 3.7 & 7 & 0.524 & 0.640 & 0.391 & 3.238 \\
@@ -17,7 +17,7 @@ pair & mapper & $k$ & params (M) & MiB & $R^2$ in & $R^2_K$ held & $R^2_V$ held 
 1.5B$\to$0.5B & heo\_kall & 28 & 44.0 & 84 & 0.806 & 0.842 & 0.708 & 2.937 \\
 \bottomrule\end{tabular}\end{table}
 
-\begin{table}[t]\centering\small\caption{Ridge $\lambda$ sweep at the selected $k^*$ (centred-covariance reading).}\label{tab:lambda}
+\begin{table}[t]\centering\small\setlength{\tabcolsep}{4pt}\caption{Ridge $\lambda$ sweep at the selected $k^*$ (centred-covariance reading).}\label{tab:lambda}
 \begin{tabular}{llr}\toprule
 pair & $\lambda$ & held-out NLL [95\% CI] \\\midrule
 3B$\to$1.5B & 0.0 & 2.529 [2.385, 2.670] \\
@@ -32,128 +32,73 @@ pair & $\lambda$ & held-out NLL [95\% CI] \\\midrule
 1.5B$\to$0.5B & 1.0 & 3.144 [2.988, 3.296] \\
 \bottomrule\end{tabular}\end{table}
 
-\begin{table}[t]\centering\small\caption{Experiment Q. Accuracy counts every item; jump = judge-NLL jump at the switch (16 tokens each side).}\label{tab:quality}
-\begin{tabular}{llrrrrrr}\toprule
-pair & condition & GSM8K & needle & agree$_{post}$ & jump & lost & resume (s) \\\midrule
-3B$\to$1.5B & big (no pressure) & 0.55 & 1.00 & 0.998 & -- & 0 & -- \\
-3B$\to$1.5B & A restart & 0.40 & 1.00 & 0.861 & -- & 28 & 1.66 \\
-3B$\to$1.5B & A$'$ re-prefill & 0.50 & 1.00 & 0.866 & +0.293 & 0 & 0.84 \\
-3B$\to$1.5B & B always small & 0.45 & 1.00 & 0.863 & -- & 0 & -- \\
-3B$\to$1.5B & C ridge mid-decode & 0.15 & 0.58 & 0.698 & +2.344 & 0 & 0.55 \\
-3B$\to$1.5B & D molt & 0.45 & 0.38 & 0.789 & +1.384 & 0 & 0.99 \\
-3B$\to$1.5B & C + ordered & 0.15 & 0.58 & 0.698 & +2.344 & 0 & 1.46 \\
-3B$\to$1.5B & D, depth-linear & 0.10 & 0.00 & 0.708 & +2.385 & 0 & 1.32 \\
-1.5B$\to$0.5B & big (no pressure) & 0.45 & 1.00 & 0.998 & -- & 0 & -- \\
-1.5B$\to$0.5B & A restart & 0.00 & 0.96 & 0.860 & -- & 29 & 1.76 \\
-1.5B$\to$0.5B & A$'$ re-prefill & 0.25 & 0.96 & 0.858 & +0.352 & 0 & 1.33 \\
-1.5B$\to$0.5B & B always small & 0.00 & 0.96 & 0.860 & -- & 0 & -- \\
-1.5B$\to$0.5B & C ridge mid-decode & 0.00 & 0.21 & 0.686 & +1.779 & 0 & 1.64 \\
-1.5B$\to$0.5B & D molt & 0.05 & 0.12 & 0.751 & +1.441 & 0 & 2.15 \\
-1.5B$\to$0.5B & C + ordered & 0.00 & 0.21 & 0.686 & +1.779 & 0 & 1.43 \\
-1.5B$\to$0.5B & D, depth-linear & 0.05 & 0.00 & 0.720 & +3.107 & 0 & 1.52 \\
+\begin{table}[t]\centering\small\setlength{\tabcolsep}{4pt}\caption{Experiment Q. Accuracy counts every item; needle$_{2K}$ embeds the same task in $\sim$2\,100 tokens of unrelated text. jump = judge-NLL jump at the switch (16 tokens each side); resume = time until new content (all tasks).}\label{tab:quality}
+\begin{tabular}{llrrrrrrr}\toprule
+pair & condition & GSM8K & needle & needle$_{2K}$ & agree$_{post}$ & jump & lost & resume (s) \\\midrule
+3B$\to$1.5B & big (no pressure) & 0.55 & 1.00 & 1.00 & 0.998 & -- & 0 & -- \\
+3B$\to$1.5B & A restart & 0.40 & 1.00 & -- & 0.861 & -- & 28 & 1.66 \\
+3B$\to$1.5B & A$'$ re-prefill & 0.50 & 1.00 & 1.00 & 0.887 & +0.247 & 0 & 1.48 \\
+3B$\to$1.5B & B always small & 0.45 & 1.00 & 1.00 & 0.884 & -- & 0 & -- \\
+3B$\to$1.5B & C ridge mid-decode & 0.15 & 0.58 & 0.08 & 0.672 & +2.794 & 0 & 0.74 \\
+3B$\to$1.5B & D molt & 0.45 & 0.38 & 0.08 & 0.769 & +1.721 & 0 & 1.12 \\
+3B$\to$1.5B & C + ordered & 0.15 & 0.58 & -- & 0.698 & +2.344 & 0 & 1.46 \\
+3B$\to$1.5B & D, depth-linear & 0.10 & 0.00 & -- & 0.708 & +2.385 & 0 & 1.32 \\
+1.5B$\to$0.5B & big (no pressure) & 0.45 & 1.00 & 1.00 & 0.998 & -- & 0 & -- \\
+1.5B$\to$0.5B & A restart & 0.00 & 0.96 & -- & 0.860 & -- & 29 & 1.76 \\
+1.5B$\to$0.5B & A$'$ re-prefill & 0.25 & 0.96 & 0.42 & 0.848 & +0.724 & 0 & 1.38 \\
+1.5B$\to$0.5B & B always small & 0.00 & 0.96 & 0.42 & 0.850 & -- & 0 & -- \\
+1.5B$\to$0.5B & C ridge mid-decode & 0.00 & 0.21 & 0.08 & 0.674 & +1.940 & 0 & 1.49 \\
+1.5B$\to$0.5B & D molt & 0.05 & 0.12 & 0.00 & 0.720 & +1.979 & 0 & 1.96 \\
+1.5B$\to$0.5B & C + ordered & 0.00 & 0.21 & -- & 0.686 & +1.779 & 0 & 1.43 \\
+1.5B$\to$0.5B & D, depth-linear & 0.05 & 0.00 & -- & 0.720 & +3.107 & 0 & 1.52 \\
 \bottomrule\end{tabular}\end{table}
 
-\begin{table}[t]\centering\small\caption{Experiment M: every cell. Peak = kernel lifetime-max phys\_footprint (MiB).}\label{tab:memory}
-\begin{tabular}{lrrlrrlr}\toprule
-pair & $h$ & cap & condition & survived & peak & killed in & resume (s) \\\midrule
-3B$\to$1.5B & 128 & 2359 & A restart & 3/3 & 2301 & -- & 1.84 \\
-3B$\to$1.5B & 128 & 2359 & A$'$ re-prefill & 3/3 & 2349 & -- & 2.31 \\
-3B$\to$1.5B & 128 & 2359 & B always small & 3/3 & 2281 & -- & -- \\
-3B$\to$1.5B & 128 & 2359 & C ridge mid-decode & 0/3 & 2362 & load\_dst & -- \\
-3B$\to$1.5B & 128 & 2359 & C + ordered & 3/3 & 2294 & -- & 2.92 \\
-3B$\to$1.5B & 128 & 2359 & D molt & 3/3 & 2304 & -- & 3.35 \\
-3B$\to$1.5B & 128 & 2359 & D, clear-no-wait & 0/3 & 2364 & decode\_dst & -- \\
-3B$\to$1.5B & 128 & 2359 & D, colocated & 0/3 & 2364 & load\_dst & -- \\
-3B$\to$1.5B & 128 & 2359 & D, del-only & 0/3 & 2363 & load\_dst & -- \\
-3B$\to$1.5B & 128 & 2359 & big, ignores pressure & 0/3 & 2361 & decode\_src & -- \\
-3B$\to$1.5B & 588 & 2819 & A restart & 3/3 & 2738 & -- & 1.41 \\
-3B$\to$1.5B & 588 & 2819 & A$'$ re-prefill & 3/3 & 2801 & -- & 1.46 \\
-3B$\to$1.5B & 588 & 2819 & B always small & 3/3 & 2734 & -- & -- \\
-3B$\to$1.5B & 588 & 2819 & C ridge mid-decode & 0/3 & 2821 & load\_dst & -- \\
-3B$\to$1.5B & 588 & 2819 & C + ordered & 3/3 & 2690 & -- & 1.36 \\
-3B$\to$1.5B & 588 & 2819 & D molt & 3/3 & 2724 & -- & 2.18 \\
-3B$\to$1.5B & 588 & 2819 & D, clear-no-wait & 0/3 & 2827 & decode\_dst & -- \\
-3B$\to$1.5B & 588 & 2819 & D, colocated & 0/3 & 2821 & load\_dst & -- \\
-3B$\to$1.5B & 588 & 2819 & D, del-only & 0/3 & 2822 & load\_dst & -- \\
-3B$\to$1.5B & 588 & 2819 & big, ignores pressure & 0/3 & 2829 & decode\_src & -- \\
-3B$\to$1.5B & 1112 & 3343 & A restart & 3/3 & 3248 & -- & 2.67 \\
-3B$\to$1.5B & 1112 & 3343 & A$'$ re-prefill & 3/3 & 3324 & -- & 2.03 \\
-3B$\to$1.5B & 1112 & 3343 & B always small & 3/3 & 3242 & -- & -- \\
-3B$\to$1.5B & 1112 & 3343 & C ridge mid-decode & 0/3 & 3349 & transplant & -- \\
-3B$\to$1.5B & 1112 & 3343 & C + ordered & 3/3 & 3201 & -- & 2.52 \\
-3B$\to$1.5B & 1112 & 3343 & D molt & 3/3 & 3237 & -- & 2.48 \\
-3B$\to$1.5B & 1112 & 3343 & D, clear-no-wait & 0/3 & 3350 & decode\_dst & -- \\
-3B$\to$1.5B & 1112 & 3343 & D, colocated & 0/3 & 3346 & transplant & -- \\
-3B$\to$1.5B & 1112 & 3343 & D, del-only & 0/3 & 3345 & load\_dst & -- \\
-3B$\to$1.5B & 1112 & 3343 & big, ignores pressure & 0/3 & 3357 & decode\_src & -- \\
-3B$\to$1.5B & 1336 & 3567 & A restart & 3/3 & 3505 & -- & 0.85 \\
-3B$\to$1.5B & 1336 & 3567 & A$'$ re-prefill & 0/3 & 3572 & decode\_dst & -- \\
-3B$\to$1.5B & 1336 & 3567 & B always small & 3/3 & 3500 & -- & -- \\
-3B$\to$1.5B & 1336 & 3567 & C ridge mid-decode & 0/3 & 3570 & transplant & -- \\
-3B$\to$1.5B & 1336 & 3567 & C + ordered & 3/3 & 3458 & -- & 1.02 \\
-3B$\to$1.5B & 1336 & 3567 & D molt & 3/3 & 3493 & -- & 1.23 \\
-3B$\to$1.5B & 1336 & 3567 & D, clear-no-wait & 0/3 & 3577 & decode\_dst & -- \\
-3B$\to$1.5B & 1336 & 3567 & D, colocated & 0/3 & 3570 & transplant & -- \\
-3B$\to$1.5B & 1336 & 3567 & D, del-only & 0/3 & 3570 & load\_dst & -- \\
-3B$\to$1.5B & 1336 & 3567 & big, ignores pressure & 0/3 & 3575 & decode\_src & -- \\
-3B$\to$1.5B & 2353 & 4584 & A restart & 3/3 & 4531 & -- & 0.80 \\
-3B$\to$1.5B & 2353 & 4584 & A$'$ re-prefill & 0/3 & 4595 & decode\_dst & -- \\
-3B$\to$1.5B & 2353 & 4584 & B always small & 3/3 & 4526 & -- & -- \\
-3B$\to$1.5B & 2353 & 4584 & C ridge mid-decode & 0/3 & 4593 & transplant & -- \\
-3B$\to$1.5B & 2353 & 4584 & C + ordered & 3/3 & 4480 & -- & 1.07 \\
-3B$\to$1.5B & 2353 & 4584 & D molt & 3/3 & 4516 & -- & 1.23 \\
-3B$\to$1.5B & 2353 & 4584 & D, clear-no-wait & 0/3 & 4590 & decode\_dst & -- \\
-3B$\to$1.5B & 2353 & 4584 & D, colocated & 0/3 & 4587 & transplant & -- \\
-3B$\to$1.5B & 2353 & 4584 & D, del-only & 0/3 & 4586 & load\_dst & -- \\
-3B$\to$1.5B & 2353 & 4584 & big, ignores pressure & 0/3 & 4589 & decode\_src & -- \\
-1.5B$\to$0.5B & 128 & 1508 & A restart & 3/3 & 1445 & -- & 0.46 \\
-1.5B$\to$0.5B & 128 & 1508 & A$'$ re-prefill & 3/3 & 1465 & -- & 0.49 \\
-1.5B$\to$0.5B & 128 & 1508 & B always small & 3/3 & 1419 & -- & -- \\
-1.5B$\to$0.5B & 128 & 1508 & C ridge mid-decode & 0/3 & 1510 & load\_dst & -- \\
-1.5B$\to$0.5B & 128 & 1508 & C + ordered & 3/3 & 1449 & -- & 0.88 \\
-1.5B$\to$0.5B & 128 & 1508 & D molt & 3/3 & 1450 & -- & 0.87 \\
-1.5B$\to$0.5B & 128 & 1508 & D, clear-no-wait & 0/3 & 1514 & decode\_dst & -- \\
-1.5B$\to$0.5B & 128 & 1508 & D, colocated & 0/3 & 1512 & load\_dst & -- \\
-1.5B$\to$0.5B & 128 & 1508 & D, del-only & 0/3 & 1513 & load\_dst & -- \\
-1.5B$\to$0.5B & 128 & 1508 & big, ignores pressure & 0/3 & 1510 & decode\_src & -- \\
-1.5B$\to$0.5B & 205 & 1585 & A restart & 3/3 & 1494 & -- & 0.53 \\
-1.5B$\to$0.5B & 205 & 1585 & A$'$ re-prefill & 3/3 & 1529 & -- & 0.56 \\
-1.5B$\to$0.5B & 205 & 1585 & B always small & 3/3 & 1487 & -- & -- \\
-1.5B$\to$0.5B & 205 & 1585 & C ridge mid-decode & 0/3 & 1588 & load\_dst & -- \\
-1.5B$\to$0.5B & 205 & 1585 & C + ordered & 3/3 & 1450 & -- & 0.83 \\
-1.5B$\to$0.5B & 205 & 1585 & D molt & 3/3 & 1484 & -- & 0.84 \\
-1.5B$\to$0.5B & 205 & 1585 & D, clear-no-wait & 3/3 & 1573 & -- & 0.40 \\
-1.5B$\to$0.5B & 205 & 1585 & D, colocated & 0/3 & 1589 & load\_dst & -- \\
-1.5B$\to$0.5B & 205 & 1585 & D, del-only & 0/3 & 1588 & load\_dst & -- \\
-1.5B$\to$0.5B & 205 & 1585 & big, ignores pressure & 0/3 & 1590 & decode\_src & -- \\
-1.5B$\to$0.5B & 345 & 1725 & A restart & 3/3 & 1681 & -- & 0.51 \\
-1.5B$\to$0.5B & 345 & 1725 & A$'$ re-prefill & 3/3 & 1721 & -- & 0.48 \\
-1.5B$\to$0.5B & 345 & 1725 & B always small & 3/3 & 1676 & -- & -- \\
-1.5B$\to$0.5B & 345 & 1725 & C ridge mid-decode & 0/3 & 1728 & transplant & -- \\
-1.5B$\to$0.5B & 345 & 1725 & C + ordered & 3/3 & 1637 & -- & 0.66 \\
-1.5B$\to$0.5B & 345 & 1725 & D molt & 3/3 & 1671 & -- & 0.79 \\
-1.5B$\to$0.5B & 345 & 1725 & D, clear-no-wait & 0/3 & 1731 & decode\_dst & -- \\
-1.5B$\to$0.5B & 345 & 1725 & D, colocated & 0/3 & 1735 & transplant & -- \\
-1.5B$\to$0.5B & 345 & 1725 & D, del-only & 0/3 & 1727 & load\_dst & -- \\
-1.5B$\to$0.5B & 345 & 1725 & big, ignores pressure & 0/3 & 1734 & decode\_src & -- \\
-1.5B$\to$0.5B & 569 & 1949 & A restart & 3/3 & 1871 & -- & 0.79 \\
-1.5B$\to$0.5B & 569 & 1949 & A$'$ re-prefill & 3/3 & 1916 & -- & 0.58 \\
-1.5B$\to$0.5B & 569 & 1949 & B always small & 3/3 & 1868 & -- & -- \\
-1.5B$\to$0.5B & 569 & 1949 & C ridge mid-decode & 3/3 & 1909 & -- & 1.23 \\
-1.5B$\to$0.5B & 569 & 1949 & C + ordered & 3/3 & 1838 & -- & 0.81 \\
-1.5B$\to$0.5B & 569 & 1949 & D molt & 3/3 & 1864 & -- & 1.34 \\
-1.5B$\to$0.5B & 569 & 1949 & D, clear-no-wait & 2/3 & 1949 & decode\_dst & 3.12 \\
-1.5B$\to$0.5B & 569 & 1949 & D, colocated & 3/3 & 1909 & -- & 1.63 \\
-1.5B$\to$0.5B & 569 & 1949 & D, del-only & 0/3 & 1951 & load\_dst & -- \\
-1.5B$\to$0.5B & 569 & 1949 & big, ignores pressure & 0/3 & 1959 & decode\_src & -- \\
-1.5B$\to$0.5B & 818 & 2198 & A restart & 3/3 & 2127 & -- & 1.87 \\
-1.5B$\to$0.5B & 818 & 2198 & A$'$ re-prefill & 3/3 & 2176 & -- & 1.49 \\
-1.5B$\to$0.5B & 818 & 2198 & B always small & 3/3 & 2126 & -- & -- \\
-1.5B$\to$0.5B & 818 & 2198 & C ridge mid-decode & 3/3 & 2180 & -- & 2.93 \\
-1.5B$\to$0.5B & 818 & 2198 & C + ordered & 3/3 & 2093 & -- & 2.43 \\
-1.5B$\to$0.5B & 818 & 2198 & D molt & 3/3 & 2121 & -- & 1.49 \\
-1.5B$\to$0.5B & 818 & 2198 & D, clear-no-wait & 0/3 & 2211 & decode\_dst & -- \\
-1.5B$\to$0.5B & 818 & 2198 & D, colocated & 3/3 & 2166 & -- & 3.08 \\
-1.5B$\to$0.5B & 818 & 2198 & D, del-only & 0/3 & 2199 & load\_dst & -- \\
-1.5B$\to$0.5B & 818 & 2198 & big, ignores pressure & 0/3 & 2206 & decode\_src & -- \\
-\bottomrule\end{tabular}\end{table}
+\begin{table}[t]\centering\small\setlength{\tabcolsep}{4pt}\caption{Experiment M: runs that survived / runs, per condition and headroom $h$ (MiB). Every run is its own process under the watchdog. Peaks, kill phases and times for every cell are in RESULTS.md.}\label{tab:memory}
+\begin{tabular}{lrrrrr}\toprule
+\multicolumn{6}{l}{\textbf{3B$\to$1.5B}, default MLX cache; co-resident need $\approx$1176\,MiB} \\
+condition & $h=128$ & $h=588$ & $h=1112$ & $h=1336$ & $h=2353$ \\ \midrule
+big, ignores pressure & 0/3 & 0/3 & 0/3 & 0/3 & 0/3 \\
+A restart & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+A$'$ re-prefill & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+B always small & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+C ridge mid-decode & 0/3 & 0/3 & 0/3 & 3/3 & 3/3 \\
+D molt & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+C + ordered & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+D, colocated & 0/3 & 0/3 & 0/3 & 3/3 & 3/3 \\
+D, del-only & 0/3 & 0/3 & 0/3 & 0/3 & 0/3 \\
+D, clear-no-wait & 0/3 & 0/3 & 0/3 & 0/3 & 0/3 \\
+\midrule
+\multicolumn{6}{l}{\textbf{3B$\to$1.5B}, 20\,MiB cache limit; co-resident need $\approx$1176\,MiB} \\
+condition & $h=128$ & $h=588$ & $h=1112$ & $h=1336$ & $h=2353$ \\ \midrule
+A restart & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+A$'$ re-prefill & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+C ridge mid-decode & 0/3 & 0/3 & 0/3 & 3/3 & 3/3 \\
+D molt & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+C + ordered & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+D, del-only & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+D, clear-no-wait & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+\midrule
+\multicolumn{6}{l}{\textbf{1.5B$\to$0.5B}, default MLX cache; co-resident need $\approx$409\,MiB} \\
+condition & $h=128$ & $h=205$ & $h=345$ & $h=569$ & $h=818$ \\ \midrule
+big, ignores pressure & 0/3 & 0/3 & 0/3 & 0/3 & 0/3 \\
+A restart & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+A$'$ re-prefill & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+B always small & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+C ridge mid-decode & 0/3 & 0/3 & 0/3 & 3/3 & 3/3 \\
+D molt & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+C + ordered & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+D, colocated & 0/3 & 0/3 & 0/3 & 3/3 & 3/3 \\
+D, del-only & 0/3 & 0/3 & 0/3 & 0/3 & 0/3 \\
+D, clear-no-wait & 3/3 & 3/3 & 0/3 & 3/3 & 3/3 \\
+\midrule
+\multicolumn{6}{l}{\textbf{1.5B$\to$0.5B}, 20\,MiB cache limit; co-resident need $\approx$409\,MiB} \\
+condition & $h=128$ & $h=205$ & $h=345$ & $h=569$ & $h=818$ \\ \midrule
+A restart & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+A$'$ re-prefill & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+C ridge mid-decode & 0/3 & 0/3 & 0/3 & 3/3 & 3/3 \\
+D molt & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+C + ordered & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+D, del-only & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+D, clear-no-wait & 3/3 & 3/3 & 3/3 & 3/3 & 3/3 \\
+\bottomrule
+\end{tabular}\end{table}
