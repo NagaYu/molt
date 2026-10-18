@@ -68,7 +68,9 @@ def main():
     api.upload_file(repo_id=MODEL_REPO, path_or_fileobj=str(out / "README.md"), path_in_repo="README.md",
                     commit_message="Model card for v0.2 (MLX); credit prior work")
     api.upload_folder(repo_id=DATA_REPO, repo_type="dataset", folder_path=str(out / "dataset_v0.2"),
-                      path_in_repo="v0.2", commit_message="v0.2 measurements (MLX, jetsam emulation)")
+                      path_in_repo="v0.2", commit_message="v0.2 measurements (MLX, jetsam emulation)",
+                      # re-runs replace whole experiments; superseded runs live under superseded/
+                      delete_patterns=["raw/memory/**", "resume_cost/**"])
     print("uploaded")
 
 
